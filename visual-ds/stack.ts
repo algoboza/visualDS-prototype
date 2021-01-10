@@ -1,10 +1,11 @@
-import { Notifyable } from "./base";
+import { Observable } from "./base";
 
 export interface Data {
     type: "string" | "number";
+    value: unknown;
 }
 
-export class Stack<T> extends Notifyable {
+export class Stack<T> extends Observable {
     private stk: T[];
 
     constructor() {
@@ -14,13 +15,13 @@ export class Stack<T> extends Notifyable {
 
     push(value: T): void {
         this.stk.push(value);
-        this.notifyChange();
+        this.notifyChange("push", { action: "push", value });
     }
 
     pop(): T {
-        const ret = this.stk.pop();
-        this.notifyChange();
-        return ret;
+        const value = this.stk.pop();
+        this.notifyChange("pop", { action: "pop", value });
+        return value;
     }
 
     size(): number {

@@ -1,28 +1,37 @@
 export interface Data {
     type: "string" | "number";
+    value: string | number;
 }
 
 export class Visualizer {
     constructor() {}
 }
 
-interface NotifyHandler {
-    (): void;
+export interface ActionArgs {
+    action: string;
+    value?: any;
 }
 
-export class Notifyable {
-    #handlers: NotifyHandler[];
+interface NotifyHandler {
+    (e: ActionArgs): void;
+}
+
+export class Observable {
+    #handlers: { [action: string]: NotifyHandler[] };
     constructor() {
-        this.#handlers = [];
+        this.#handlers = {};
     }
 
-    notifyChange(): void {
-        this.#handlers.forEach((handler) => handler());
+    notifyChange(action: string, e: ActionArgs): void {
+        this.#handlers[action].forEach((handler) => handler(e));
     }
 
-    addChangeHandler(f: () => void): void {
-        if (!this.#handlers.find((handler) => handler === f)) {
-            this.#handlers.push(f);
+    addActionHandler(action: string, f: NotifyHandler): void {
+        if (!Array.isArray(this.#handlers[action])) {
+            this.#handlers[action] = [];
+        }
+        if (!this.#handlers[action].find((handler) => handler === f)) {
+            this.#handlers[action].push(f);
         }
     }
 }
