@@ -1,14 +1,14 @@
 import { Svg, SVG, Text } from "@svgdotjs/svg.js";
-import { Data } from "../base";
-import { Stack } from "../stack";
+import { Visualizable } from "../../structure/base";
+import { Stack } from "../../structure/stack";
 
 export class StackSVGRenderer {
-    private stack: Stack<Data>;
+    private stack: Stack;
     private svg: Svg;
 
     private nodes: Text[];
 
-    constructor(stack: Stack<Data>) {
+    constructor(stack: Stack) {
         this.stack = stack;
 
         this.stack.addActionHandler("push", (e) => {
@@ -29,8 +29,8 @@ export class StackSVGRenderer {
 
     onChange(): void {}
 
-    onPush(data: Data): void {
-        const node = this.svg.text(data.value.toString()).move(0, this.stack.size() * 20);
+    onPush(data: Visualizable): void {
+        const node = this.svg.text(data.toString()).move(0, this.stack.size() * 20);
         this.nodes.push(node);
     }
 

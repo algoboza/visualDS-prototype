@@ -1,6 +1,6 @@
-import { Data } from "@/visual-ds/base";
-import { Stack } from "@/visual-ds/stack";
-import { StackSVGRenderer } from "@/visual-ds/svg/stack";
+import { Visualizable } from "@/visual-ds/structure/base";
+import { Stack } from "@/visual-ds/structure/stack";
+import { StackSVGRenderer } from "@/visual-ds/renderer/svg/stack";
 import { useEffect, useRef, useState, VFC } from "react";
 
 interface StackControllerProps {
@@ -44,12 +44,13 @@ const StackController: VFC<StackControllerProps> = (props) => {
 
 export default (function StackSVG() {
     const container = useRef<HTMLDivElement>(null);
-    const stack = useRef<Stack<Data>>(null);
+    const stack = useRef<Stack<Visualizable>>(null);
 
     useEffect(() => {
-        const stk = new Stack<Data>();
+        const stk = new Stack<Visualizable>();
         stack.current = stk;
         const stackSVGRenderer = new StackSVGRenderer(stk);
+
         container.current.appendChild(stackSVGRenderer.node);
 
         return () => {
@@ -61,7 +62,7 @@ export default (function StackSVG() {
         if (value === "") {
             return;
         }
-        stack.current.push({ type: "string", value });
+        stack.current.push(value);
     }
 
     function handlePop() {
