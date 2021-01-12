@@ -11,7 +11,7 @@ interface NotifyHandler {
     (e: ActionArgs): void;
 }
 
-export class Observable {
+export class DSObservable {
     #handlers: { [action: string]: NotifyHandler[] };
 
     constructor() {

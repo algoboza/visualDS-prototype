@@ -1,6 +1,6 @@
-import { DSBase, Visualizable, Observable } from "./base";
+import { DSBase, Visualizable, DSObservable } from "./base";
 
-export class Stack<T extends Visualizable = Visualizable> extends Observable implements DSBase {
+export class Stack<T extends Visualizable = Visualizable> extends DSObservable implements DSBase {
     public readonly name = "Stack";
 
     private stk: T[];
