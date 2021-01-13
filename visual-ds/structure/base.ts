@@ -3,26 +3,27 @@ export interface DSBase {
 }
 export type Visualizable = string | number | DSBase;
 
-export interface ActionArgs {
+export interface ActionArgs<TExpose> {
     value?: Visualizable;
+    expose: TExpose;
 }
 
-interface NotifyHandler {
-    (e: ActionArgs): void;
+interface NotifyHandler<TExpose> {
+    (e: ActionArgs<TExpose>): void;
 }
 
-export class DSObservable {
-    #handlers: { [action: string]: NotifyHandler[] };
+export class DSObservable<TExpose> {
+    #handlers: { [action: string]: NotifyHandler<TExpose>[] };
 
     constructor() {
         this.#handlers = {};
     }
 
-    notifyChange(action: string, e: ActionArgs): void {
+    notifyChange(action: string, e: ActionArgs<TExpose>): void {
         this.#handlers[action].forEach((handler) => handler(e));
     }
 
-    addActionHandler(action: string, f: NotifyHandler): void {
+    addActionHandler(action: string, f: NotifyHandler<TExpose>): void {
         if (!Array.isArray(this.#handlers[action])) {
             this.#handlers[action] = [];
         }
