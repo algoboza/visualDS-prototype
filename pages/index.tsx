@@ -19,7 +19,7 @@ export default (function Home() {
             </Head>
 
             <main className={styles.main}>
-                Visual DS
+                <h1>Visual DS</h1>
                 <div>
                     <a href="stack" onClick={clickPage("stack")}>
                         StackSVG

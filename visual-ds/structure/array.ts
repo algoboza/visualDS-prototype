@@ -1,6 +1,12 @@
 import { DSBase, Visualizable, DSObservable } from "./base";
 
-export class Array<T extends Visualizable = Visualizable> extends DSObservable implements DSBase {
+export interface ArrayExpose<T> {
+    data: T[];
+}
+
+export class Array<T extends Visualizable = Visualizable>
+    extends DSObservable<ArrayExpose<T>>
+    implements DSBase {
     public readonly name = "Array";
 
     private arr: T[];
