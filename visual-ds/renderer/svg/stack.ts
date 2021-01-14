@@ -1,9 +1,10 @@
 import { Svg, SVG, Text } from "@svgdotjs/svg.js";
 import { Visualizable } from "../../structure/base";
-import { Stack } from "../../structure/stack";
+import { Stack, StackExpose } from "../../structure/stack";
 
 export class StackSVGRenderer {
     private stack: Stack;
+    private stackExpose: StackExpose;
     private svg: Svg;
 
     private nodes: Text[];
@@ -17,6 +18,7 @@ export class StackSVGRenderer {
         this.stack.addActionHandler("pop", () => {
             this.onPop();
         });
+        this.stackExpose = stack.expose;
 
         this.nodes = [];
 

@@ -1,6 +1,6 @@
 import { DSBase, Visualizable, DSObservable } from "./base";
 
-export interface StackExpose<T> {
+export interface StackExpose<T extends Visualizable = Visualizable> {
     stack: T[];
 }
 
