@@ -21,7 +21,7 @@ export default (function Home() {
             <main className={styles.main}>
                 <h1>Visual DS</h1>
                 <div>
-                    <a href="stack" onClick={clickPage("stack")}>
+                    <a href="stack" onClick={clickPage("svgjs/stack")}>
                         StackSVG
                     </a>
                 </div>

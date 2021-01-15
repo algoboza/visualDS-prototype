@@ -1,6 +1,6 @@
 import { Visualizable } from "@/visual-ds/structure/base";
 import { Stack } from "@/visual-ds/structure/stack";
-import { StackSVGRenderer } from "@/visual-ds/renderer/svg/stack";
+import { StackSVGRenderer } from "@/visual-ds/renderer/svgjs/stack";
 import { useEffect, useRef, useState, VFC } from "react";
 
 interface StackControllerProps {
@@ -74,8 +74,8 @@ export default (function StackSVG() {
 
     return (
         <div>
-            <div ref={container}></div>
             <StackController onPush={handlePush} onPop={handlePop} />
+            <div ref={container}></div>
         </div>
     );
 } as VFC);
