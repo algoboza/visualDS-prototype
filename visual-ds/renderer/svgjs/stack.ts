@@ -1,4 +1,4 @@
-import { Element, Svg, SVG, G, Container } from "@svgdotjs/svg.js";
+import { Element, Svg, SVG } from "@svgdotjs/svg.js";
 import { Visualizable } from "../../structure/base";
 import { Stack, StackExpose } from "../../structure/stack";
 

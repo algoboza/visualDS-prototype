@@ -20,6 +20,13 @@ export default (function Home() {
 
             <main className={styles.main}>
                 <h1>Visual DS</h1>
+                <h2>D3.js</h2>
+                <div>
+                    <a href="stack" onClick={clickPage("d3/stack")}>
+                        StackD3
+                    </a>
+                </div>
+                <h2>SVG.js</h2>
                 <div>
                     <a href="stack" onClick={clickPage("svgjs/stack")}>
                         StackSVG
