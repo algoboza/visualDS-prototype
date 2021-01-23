@@ -14,6 +14,10 @@ export class Stack<T extends Visualizable = Visualizable>
     constructor() {
         super();
         this.stk = [];
+
+        this.onExpose(() => ({
+            stack: [...this.stk]
+        }));
     }
 
     push(value: T): void {

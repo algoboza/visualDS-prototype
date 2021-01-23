@@ -13,7 +13,7 @@ interface NotifyHandler {
 
 export class DSObservable<TExpose> {
     #handlers: { [action: string]: NotifyHandler[] };
-    #expose: TExpose;
+    #exposeFn: () => TExpose;
 
     constructor() {
         this.#handlers = {};
@@ -32,11 +32,11 @@ export class DSObservable<TExpose> {
         }
     }
 
-    set expose(exposes: TExpose) {
-        this.#expose = exposes;
+    protected onExpose(exposeFn: () => TExpose): void {
+        this.#exposeFn = exposeFn;
     }
 
     get expose(): TExpose {
-        return this.#expose;
+        return this.#exposeFn();
     }
 }
