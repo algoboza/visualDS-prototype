@@ -1,7 +1,7 @@
 export interface DSBase {
     name: string;
 }
-export type Visualizable = string | number | DSBase;
+export type Visualizable = string | number | DSBase; // types that visualizable.
 
 export interface ActionArgs {
     value?: Visualizable;
