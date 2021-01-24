@@ -1,10 +1,10 @@
-import { Visualizable } from "@/visual-ds/structure/base";
 import { Stack } from "@/visual-ds/structure/stack";
 import * as d3 from "d3";
 
 const CELL_SPACE = 5;
 const CELL_WIDTH = 40;
 const CELL_HEIGHT = 30;
+const FLY_DISTANCE = 40;
 
 export class StackD3Renderer {
     private stack: Stack;
@@ -35,16 +35,6 @@ export class StackD3Renderer {
     update(): void {
         const trans = d3.transition().duration(750).ease(d3.easeCubicOut);
 
-        function exitTransition(
-            exit: d3.Selection<undefined, Visualizable, SVGGElement, undefined>
-        ) {
-            exit.transition(trans)
-                .attr("opacity", 0.0)
-                .attr("fill-opacity", 0.0)
-                .attr("x", (_, i: number) => (CELL_WIDTH + CELL_SPACE) * i + 40)
-                .remove();
-        }
-
         this.boxGroup
             .selectAll("rect")
             .data(this.stack.expose.stack)
@@ -52,7 +42,7 @@ export class StackD3Renderer {
                 (enter) =>
                     enter
                         .append("rect")
-                        .attr("x", (_, i: number) => (CELL_WIDTH + CELL_SPACE) * i + 40)
+                        .attr("x", (_, i: number) => (CELL_WIDTH + CELL_SPACE) * i + FLY_DISTANCE)
                         .attr("opacity", 0.0)
                         .call((enter) =>
                             enter
@@ -62,7 +52,17 @@ export class StackD3Renderer {
                                 .attr("opacity", 1.0)
                         ),
                 (update) => update,
-                (exit) => exit.call(exitTransition)
+                (exit) =>
+                    exit.call((exit) =>
+                        exit
+                            .transition(trans)
+                            .attr("opacity", 0.0)
+                            .attr(
+                                "x",
+                                (_, i: number) => (CELL_WIDTH + CELL_SPACE) * i + FLY_DISTANCE
+                            )
+                            .remove()
+                    )
             )
 
             .attr("y", 30)
@@ -79,7 +79,11 @@ export class StackD3Renderer {
                 (enter) =>
                     enter
                         .append("text")
-                        .attr("x", (_, i: number) => (CELL_WIDTH + CELL_SPACE) * i + 20 + 40)
+                        .attr(
+                            "x",
+                            (_, i: number) =>
+                                (CELL_WIDTH + CELL_SPACE) * i + CELL_WIDTH / 2 + FLY_DISTANCE
+                        )
                         .attr("fill-opacity", 0.0)
                         .call((enter) =>
                             enter
@@ -89,7 +93,18 @@ export class StackD3Renderer {
                                 .attr("fill-opacity", 1.0)
                         ),
                 (update) => update,
-                (exit) => exit.call(exitTransition)
+                (exit) =>
+                    exit.call((exit) =>
+                        exit
+                            .transition(trans)
+                            .attr("fill-opacity", 0.0)
+                            .attr(
+                                "x",
+                                (_, i: number) =>
+                                    (CELL_WIDTH + CELL_SPACE) * i + CELL_WIDTH / 2 + 40
+                            )
+                            .remove()
+                    )
             )
             .text((d) => d.toString())
             .attr("y", CELL_HEIGHT + CELL_HEIGHT / 2)
