@@ -12,12 +12,12 @@ interface NotifyHandler {
     // Anonymous function
 }
 
-export class DSObservable<TExpose> {
+export class DSObservable<TExpose> { // Generic which is used by DSObservable
     #handlers: { [action: string]: NotifyHandler[] };
     #expose: TExpose;
 
     constructor() {
-        this.#handlers = {};
+        this.#handlers = {}; // 
     }
 
     notifyChange(action: string, e: ActionArgs): void {
