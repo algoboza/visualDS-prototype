@@ -8,7 +8,8 @@ export interface ActionArgs {
 }
 
 interface NotifyHandler {
-    (e: ActionArgs): void;
+    (e: ActionArgs): void; // Action Args 타입의 event Handler 가 인자인 void 함수
+    // Anonymous function
 }
 
 export class DSObservable<TExpose> {
