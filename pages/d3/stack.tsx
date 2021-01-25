@@ -7,7 +7,8 @@ export default (function StackD3() {
     const container = useRef<HTMLDivElement>(null);
     const stack = useRef<Stack>(null);
     const renderer = useRef<StackD3Renderer>(null);
-
+    console.log("stacking");
+    console.log(stack);
     useEffect(() => {
         stack.current = new Stack();
         renderer.current = new StackD3Renderer(stack.current);

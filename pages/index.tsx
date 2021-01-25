@@ -8,7 +8,7 @@ export default (function Home() {
 
     const clickPage = (href: string) => (e) => {
         e.preventDefault();
-        router.push(href);
+        router.push(href); // Next routing using Event Handler 
     };
 
     return (

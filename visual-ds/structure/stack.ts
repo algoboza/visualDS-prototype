@@ -1,9 +1,11 @@
 import { DSBase, Visualizable, DSObservable } from "./base";
 
 export interface StackExpose<T extends Visualizable = Visualizable> {
+    // T 는 Visualizable 을 상속한 객체만 가능.
+    // default : Visualizable
     stack: T[];
 }
-// T extends Visualizable=Visualizable equals to TExpose type.
+
 
 export class Stack<T extends Visualizable = Visualizable>
     extends DSObservable<StackExpose<T>>
