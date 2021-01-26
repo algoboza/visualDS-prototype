@@ -65,18 +65,24 @@ export class StackD3Renderer {
     }
 }
 
-interface Drawer {
-    readonly group: GSelection;
-    update: (data: Visualizable[]) => void;
-}
-
-class BoxDrawer implements Drawer {
+abstract class Drawer {
     readonly group: GSelection;
 
     constructor(parent: Selection<SVGElement>) {
-        this.group = parent.append("g").attr("class", "box");
+        this.group = parent.append("g");
+        this.init();
     }
 
+    remove() {
+        this.group.remove();
+    }
+
+    init(): void {}
+
+    abstract update(data: Visualizable[]): void;
+}
+
+class BoxDrawer extends Drawer {
     update(stack: Visualizable[]) {
         const group = this.group;
 
@@ -119,13 +125,7 @@ class BoxDrawer implements Drawer {
     }
 }
 
-class TextDrawer implements Drawer {
-    group: GSelection;
-
-    constructor(parent: Selection<SVGElement>) {
-        this.group = parent.append("g");
-    }
-
+class TextDrawer extends Drawer {
     update(stack: Visualizable[]) {
         const group = this.group;
 
@@ -173,13 +173,7 @@ class TextDrawer implements Drawer {
     }
 }
 
-class IndexDrawer implements Drawer {
-    group: GSelection;
-
-    constructor(parent: Selection<SVGElement>) {
-        this.group = parent.append("g");
-    }
-
+class IndexDrawer extends Drawer {
     update(stack: Visualizable[]) {
         const group = this.group;
         const trans = d3.transition().duration(750).ease(d3.easeCubicOut);
@@ -229,13 +223,7 @@ function drawLabel(group: GSelection) {
         .attr("text-anchor", "end");
 }
 
-class PointerDrawer implements Drawer {
-    group: GSelection;
-
-    constructor(parent: Selection<SVGElement>) {
-        this.group = parent.append("g");
-    }
-
+class PointerDrawer extends Drawer {
     update(stack: Visualizable[]) {
         const group = this.group;
 
