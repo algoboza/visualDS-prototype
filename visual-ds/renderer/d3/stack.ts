@@ -19,9 +19,9 @@ export class StackD3Renderer {
     private stack: Stack;
     private root: GSelection;
     private svg: Selection<SVGSVGElement>;
-    private boxGroup: GSelection;
-    private textGroup: GSelection;
     private labelGroup: GSelection;
+
+    private drawers: Drawer[];
 
     constructor(stack: Stack) {
         if (!stack || !(stack instanceof Stack)) {
@@ -35,13 +35,13 @@ export class StackD3Renderer {
 
         this.root = this.svg.append("g").attr("transform", "translate(50, 0)");
 
-        this.boxGroup = this.root.append("g").attr("class", "box");
-        this.textGroup = this.root.append("g").attr("class", "text");
+        this.drawers = [BoxDrawer, TextDrawer, IndexDrawer, PointerDrawer].map(
+            (D) => new D(this.root)
+        );
+
         this.labelGroup = this.root.append("g");
 
         drawLabel(this.root.append("g"));
-
-        this.root.append("g").attr("class", "index");
 
         this.update();
     }
@@ -57,10 +57,7 @@ export class StackD3Renderer {
     update(): void {
         const stk = this.stack.expose.stack;
 
-        drawBox(this.boxGroup, stk);
-        drawText(this.textGroup, stk);
-        drawIndex(this.root.select("g.index"), stk);
-        drawPointer(this.labelGroup, stk);
+        this.drawers.forEach((d) => d.update(stk));
     }
 
     node(): SVGSVGElement {
@@ -68,112 +65,150 @@ export class StackD3Renderer {
     }
 }
 
-function drawBox(group: GSelection, stack: Visualizable[]) {
-    const trans = d3.transition().duration(750).ease(d3.easeCubicOut);
-
-    group.attr("fill", "#660eb3");
-
-    return group
-        .selectAll("rect")
-        .data(stack)
-        .join(
-            (enter) =>
-                enter
-                    .append("rect")
-                    .attr("x", (_, i: number) => (CELL_WIDTH + CELL_SPACE) * i + FLY_DISTANCE)
-                    .attr("opacity", 0.0)
-                    .call((enter) =>
-                        enter
-                            .transition(trans)
-                            .attr("x", (_, i: number) => (CELL_WIDTH + CELL_SPACE) * i)
-                            .attr("opacity", 1.0)
-                    ),
-            (update) => update,
-            (exit) =>
-                exit.call((exit) =>
-                    exit
-                        .transition(trans)
-                        .attr("opacity", 0.0)
-                        .attr("x", (_, i: number) => (CELL_WIDTH + CELL_SPACE) * i + FLY_DISTANCE)
-                        .remove()
-                )
-        )
-
-        .attr("y", 30)
-        .attr("height", CELL_HEIGHT)
-        .attr("width", CELL_WIDTH);
+interface Drawer {
+    readonly group: GSelection;
+    update: (data: Visualizable[]) => void;
 }
 
-function drawText(group: GSelection, stack: Visualizable[]) {
-    const trans = d3.transition().duration(750).ease(d3.easeCubicOut);
+class BoxDrawer implements Drawer {
+    readonly group: GSelection;
 
-    group.attr("fill", "white").attr("text-anchor", "middle");
+    constructor(parent: Selection<SVGElement>) {
+        this.group = parent.append("g").attr("class", "box");
+    }
 
-    return group
-        .selectAll("text.val")
-        .data(stack)
-        .join(
-            (enter) =>
-                enter
-                    .append("text")
-                    .attr("class", "val")
-                    .attr(
-                        "x",
-                        (_, i: number) =>
-                            (CELL_WIDTH + CELL_SPACE) * i + CELL_WIDTH / 2 + FLY_DISTANCE
-                    )
-                    .attr("fill-opacity", 0.0)
-                    .call((enter) =>
-                        enter
+    update(stack: Visualizable[]) {
+        const group = this.group;
+
+        const trans = d3.transition().duration(750).ease(d3.easeCubicOut);
+
+        group.attr("fill", "#660eb3");
+
+        return group
+            .selectAll("rect")
+            .data(stack)
+            .join(
+                (enter) =>
+                    enter
+                        .append("rect")
+                        .attr("x", (_, i: number) => (CELL_WIDTH + CELL_SPACE) * i + FLY_DISTANCE)
+                        .attr("opacity", 0.0)
+                        .call((enter) =>
+                            enter
+                                .transition(trans)
+                                .attr("x", (_, i: number) => (CELL_WIDTH + CELL_SPACE) * i)
+                                .attr("opacity", 1.0)
+                        ),
+                (update) => update,
+                (exit) =>
+                    exit.call((exit) =>
+                        exit
                             .transition(trans)
-                            .attr("x", (_, i: number) => (CELL_WIDTH + CELL_SPACE) * i + 20)
-                            .attr("fill-opacity", 1.0)
-                    ),
-            (update) => update,
-            (exit) =>
-                exit.call((exit) =>
-                    exit
-                        .transition(trans)
-                        .attr("fill-opacity", 0.0)
+                            .attr("opacity", 0.0)
+                            .attr(
+                                "x",
+                                (_, i: number) => (CELL_WIDTH + CELL_SPACE) * i + FLY_DISTANCE
+                            )
+                            .remove()
+                    )
+            )
+
+            .attr("y", 30)
+            .attr("height", CELL_HEIGHT)
+            .attr("width", CELL_WIDTH);
+    }
+}
+
+class TextDrawer implements Drawer {
+    group: GSelection;
+
+    constructor(parent: Selection<SVGElement>) {
+        this.group = parent.append("g");
+    }
+
+    update(stack: Visualizable[]) {
+        const group = this.group;
+
+        const trans = d3.transition().duration(750).ease(d3.easeCubicOut);
+
+        group.attr("fill", "white").attr("text-anchor", "middle");
+
+        return group
+            .selectAll("text.val")
+            .data(stack)
+            .join(
+                (enter) =>
+                    enter
+                        .append("text")
+                        .attr("class", "val")
                         .attr(
                             "x",
-                            (_, i: number) => (CELL_WIDTH + CELL_SPACE) * i + CELL_WIDTH / 2 + 40
+                            (_, i: number) =>
+                                (CELL_WIDTH + CELL_SPACE) * i + CELL_WIDTH / 2 + FLY_DISTANCE
                         )
-                        .remove()
-                )
-        )
-        .text((d) => d.toString())
-        .attr("y", CELL_HEIGHT + CELL_HEIGHT / 2)
-        .attr("dy", "0.35em");
+                        .attr("fill-opacity", 0.0)
+                        .call((enter) =>
+                            enter
+                                .transition(trans)
+                                .attr("x", (_, i: number) => (CELL_WIDTH + CELL_SPACE) * i + 20)
+                                .attr("fill-opacity", 1.0)
+                        ),
+                (update) => update,
+                (exit) =>
+                    exit.call((exit) =>
+                        exit
+                            .transition(trans)
+                            .attr("fill-opacity", 0.0)
+                            .attr(
+                                "x",
+                                (_, i: number) =>
+                                    (CELL_WIDTH + CELL_SPACE) * i + CELL_WIDTH / 2 + 40
+                            )
+                            .remove()
+                    )
+            )
+            .text((d) => d.toString())
+            .attr("y", CELL_HEIGHT + CELL_HEIGHT / 2)
+            .attr("dy", "0.35em");
+    }
 }
 
-function drawIndex(group: GSelection, stack: Visualizable[]) {
-    const trans = d3.transition().duration(750).ease(d3.easeCubicOut);
+class IndexDrawer implements Drawer {
+    group: GSelection;
 
-    group.attr("text-anchor", "middle").attr("font-size", 13).attr("fill", "grey");
+    constructor(parent: Selection<SVGElement>) {
+        this.group = parent.append("g");
+    }
 
-    return group
-        .selectAll("text.idx")
-        .data(stack)
-        .join(
-            (enter) =>
-                enter
-                    .append("text")
-                    .attr("class", "idx")
-                    .attr("x", (_, i: number) => (CELL_WIDTH + CELL_SPACE) * i + 20)
-                    .attr("fill-opacity", 0.0)
-                    .attr("y", CELL_HEIGHT - 10 - 30)
-                    .call((enter) =>
-                        enter
-                            .transition(trans)
-                            .attr("fill-opacity", 1.0)
-                            .attr("y", CELL_HEIGHT - 10)
-                    ),
-            (update) => update,
-            (exit) => exit.transition(trans).attr("fill-opacity", 0.0).remove()
-        )
-        .text((_, i: number) => i)
-        .attr("dy", "0.35em");
+    update(stack: Visualizable[]) {
+        const group = this.group;
+        const trans = d3.transition().duration(750).ease(d3.easeCubicOut);
+
+        group.attr("text-anchor", "middle").attr("font-size", 13).attr("fill", "grey");
+
+        return group
+            .selectAll("text.idx")
+            .data(stack)
+            .join(
+                (enter) =>
+                    enter
+                        .append("text")
+                        .attr("class", "idx")
+                        .attr("x", (_, i: number) => (CELL_WIDTH + CELL_SPACE) * i + 20)
+                        .attr("fill-opacity", 0.0)
+                        .attr("y", CELL_HEIGHT - 10 - 30)
+                        .call((enter) =>
+                            enter
+                                .transition(trans)
+                                .attr("fill-opacity", 1.0)
+                                .attr("y", CELL_HEIGHT - 10)
+                        ),
+                (update) => update,
+                (exit) => exit.transition(trans).attr("fill-opacity", 0.0).remove()
+            )
+            .text((_, i: number) => i)
+            .attr("dy", "0.35em");
+    }
 }
 
 function drawLabel(group: GSelection) {
@@ -194,55 +229,61 @@ function drawLabel(group: GSelection) {
         .attr("text-anchor", "end");
 }
 
-function drawPointer(group: GSelection, stack: Visualizable[]) {
-    const trans = d3.transition().duration(750).ease(d3.easeCubicOut);
+class PointerDrawer implements Drawer {
+    group: GSelection;
 
-    // group.html(
-    //     `<path fill="currentColor" d="M7.41,15.41L12,10.83L16.59,15.41L18,14L12,8L6,14L7.41,15.41Z" />`
-    // );
+    constructor(parent: Selection<SVGElement>) {
+        this.group = parent.append("g");
+    }
 
-    group
-        .selectAll("path.topptr")
-        .data([stack.length])
-        .join(
-            (enter) =>
-                enter
-                    .append("path")
-                    .attr("class", "topptr")
-                    .attr("d", "M7.41,15.41L12,10.83L16.59,15.41L18,14L12,8L6,14L7.41,15.41Z")
-                    .attr("transform", `translate(${-CELL_SPACE - 12}, ${CELL_HEIGHT * 2})`),
-            (update) =>
-                update
-                    .call((update) =>
+    update(stack: Visualizable[]) {
+        const group = this.group;
+
+        const trans = d3.transition().duration(750).ease(d3.easeCubicOut);
+
+        group
+            .selectAll("path.topptr")
+            .data([stack.length])
+            .join(
+                (enter) =>
+                    enter
+                        .append("path")
+                        .attr("class", "topptr")
+                        .attr("d", "M7.41,15.41L12,10.83L16.59,15.41L18,14L12,8L6,14L7.41,15.41Z")
+                        .attr("transform", `translate(${-CELL_SPACE - 12}, ${CELL_HEIGHT * 2})`),
+                (update) =>
+                    update
+                        .call((update) =>
+                            update
+                                .transition(trans)
+                                .attr(
+                                    "transform",
+                                    (d) =>
+                                        `translate(${
+                                            (CELL_WIDTH + CELL_SPACE) * d - CELL_SPACE - 12
+                                        }, ${CELL_HEIGHT * 2})`
+                                )
+                        )
+                        .attr("fill-color", "red"),
+                (exit) => exit
+            );
+
+        group
+            .selectAll("text.topptr")
+            .data([stack.length])
+            .join(
+                (enter) => enter.append("text").attr("class", "topptr").attr("x", -CELL_SPACE),
+                (update) =>
+                    update.call((update) =>
                         update
                             .transition(trans)
-                            .attr(
-                                "transform",
-                                (d) =>
-                                    `translate(${
-                                        (CELL_WIDTH + CELL_SPACE) * d - CELL_SPACE - 12
-                                    }, ${CELL_HEIGHT * 2})`
-                            )
-                    )
-                    .attr("fill-color", "red"),
-            (exit) => exit
-        );
-
-    group
-        .selectAll("text.topptr")
-        .data([stack.length])
-        .join(
-            (enter) => enter.append("text").attr("class", "topptr").attr("x", -CELL_SPACE),
-            (update) =>
-                update.call((update) =>
-                    update
-                        .transition(trans)
-                        .attr("x", (d) => (CELL_WIDTH + CELL_SPACE) * d - CELL_SPACE)
-                ),
-            (exit) => exit
-        )
-        .text("TOP")
-        .attr("text-anchor", "middle")
-        .attr("dy", "0.75em")
-        .attr("y", CELL_HEIGHT * (2 + 2 / 3));
+                            .attr("x", (d) => (CELL_WIDTH + CELL_SPACE) * d - CELL_SPACE)
+                    ),
+                (exit) => exit
+            )
+            .text("TOP")
+            .attr("text-anchor", "middle")
+            .attr("dy", "0.75em")
+            .attr("y", CELL_HEIGHT * (2 + 2 / 3));
+    }
 }
