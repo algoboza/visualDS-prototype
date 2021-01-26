@@ -24,6 +24,9 @@ export class StackD3Renderer {
     private labelGroup: GSelection;
 
     constructor(stack: Stack) {
+        if (!stack || !(stack instanceof Stack)) {
+            throw new Error(`${stack} is not a valid Stack`);
+        }
         this.stack = stack;
         this.stack.addActionHandler("push", this.onPush.bind(this));
         this.stack.addActionHandler("pop", this.onPop.bind(this));
