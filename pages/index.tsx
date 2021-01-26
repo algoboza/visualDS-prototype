@@ -1,10 +1,10 @@
-import Head from "next/head";
+import Head from "next/head"; // 
 import { useRouter } from "next/router";
 import { VFC } from "react";
 import styles from "../styles/Home.module.css";
 
 export default (function Home() {
-    const router = useRouter();
+    const router = useRouter(); // next Router 객체 
 
     const clickPage = (href: string) => (e) => {
         e.preventDefault();
