@@ -19,7 +19,6 @@ export class StackD3Renderer {
     private stack: Stack;
     private root: GSelection;
     private svg: Selection<SVGSVGElement>;
-    private labelGroup: GSelection;
 
     private drawers: Drawer[];
 
@@ -35,13 +34,9 @@ export class StackD3Renderer {
 
         this.root = this.svg.append("g").attr("transform", "translate(50, 0)");
 
-        this.drawers = [BoxDrawer, TextDrawer, IndexDrawer, PointerDrawer].map(
+        this.drawers = [BoxDrawer, TextDrawer, IndexDrawer, PointerDrawer, LabelDrawer].map(
             (D) => new D(this.root)
         );
-
-        this.labelGroup = this.root.append("g");
-
-        drawLabel(this.root.append("g"));
 
         this.update();
     }
@@ -80,6 +75,10 @@ abstract class Drawer {
     init(): void {}
 
     abstract update(data: Visualizable[]): void;
+}
+
+abstract class StaticDrawer extends Drawer {
+    update() {}
 }
 
 class BoxDrawer extends Drawer {
@@ -205,22 +204,25 @@ class IndexDrawer extends Drawer {
     }
 }
 
-function drawLabel(group: GSelection) {
-    group
-        .append("text")
-        .text("Index")
-        .attr("font-size", 10)
-        .attr("x", -10)
-        .attr("y", CELL_HEIGHT - 5)
-        .attr("text-anchor", "end");
+class LabelDrawer extends StaticDrawer {
+    init() {
+        const group = this.group;
+        group
+            .append("text")
+            .text("Index")
+            .attr("font-size", 10)
+            .attr("x", -10)
+            .attr("y", CELL_HEIGHT - 5)
+            .attr("text-anchor", "end");
 
-    group
-        .append("text")
-        .text("Data")
-        .attr("font-size", 10)
-        .attr("x", -10)
-        .attr("y", CELL_HEIGHT * 2 - 5)
-        .attr("text-anchor", "end");
+        group
+            .append("text")
+            .text("Data")
+            .attr("font-size", 10)
+            .attr("x", -10)
+            .attr("y", CELL_HEIGHT * 2 - 5)
+            .attr("text-anchor", "end");
+    }
 }
 
 class PointerDrawer extends Drawer {
