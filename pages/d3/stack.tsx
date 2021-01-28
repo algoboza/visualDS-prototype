@@ -2,12 +2,14 @@ import { memo, MutableRefObject, useEffect, useRef, useState, VFC } from "react"
 import { StackController } from "@/components/controllers/stack";
 import { Stack } from "@/visual-ds/structure/stack";
 import { StackD3Renderer } from "@/visual-ds/renderer/d3/stack";
+import { Visualizable } from "@/visual-ds/structure/base";
 
-interface VisualizerProps {
+interface StackVisualizerProps {
     stackRef: MutableRefObject<Stack>;
 }
 
-const Visualizer = memo<VisualizerProps>(
+
+const Visualizer = memo<StackVisualizerProp>(
     // memo 함수를 통해 Visualizer 컴포넌트 리렌더링 효율 향상
     function Visualizer({ stackRef }) {
         // props 로 Stack 자료구조의 current 반환.
@@ -29,6 +31,27 @@ const Visualizer = memo<VisualizerProps>(
         return false;
     }
 );
+
+const StackSerializer = (props: { data: Visualizable[] }) => {
+    const { data = [] } = props;
+    function serialize(data: Visualizable[]) {
+        let ret = "";
+
+        ret += data.length + "\n";
+        for (let v of data) {
+            ret += `${v} `;
+        }
+        ret += "\n";
+
+        return ret;
+    }
+
+    return (
+        <div>
+            <pre>{serialize(data)}</pre>
+        </div>
+    );
+};
 
 export default (function StackD3() {
     // default 스택 페이지
@@ -53,8 +76,8 @@ export default (function StackD3() {
     return (
         <div>
             <StackController onPush={handlePush} onPop={handlePop} />
-            <Visualizer stackRef={stack} />
-            {JSON.stringify(currentStack)}
+            <StackVisualizer stackRef={stack} />
+            <StackSerializer data={currentStack} />
         </div>
     );
 } as VFC);
