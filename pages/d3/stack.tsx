@@ -8,7 +8,10 @@ interface VisualizerProps {
 }
 
 const Visualizer = memo<VisualizerProps>(
+    // memo 함수를 통해 Visualizer 컴포넌트 리렌더링 효율 향상
     function Visualizer({ stackRef }) {
+        // props 로 Stack 자료구조의 current 반환.
+        console.log(stackRef);
         const renderer = useRef<StackD3Renderer>(null);
         const container = useRef<HTMLDivElement>(null);
 
@@ -28,13 +31,16 @@ const Visualizer = memo<VisualizerProps>(
 );
 
 export default (function StackD3() {
+    // default 스택 페이지
     const stack = useRef<Stack>(new Stack());
+    // 자료형 : Stack
+    // Stack 자료구조의 기본 형태를 갖는다.
 
     const [currentStack, setCurrentStack] = useState([]);
+    // currentStack 기본 값은 [], setCurrentStack 으로 set 가능.
 
     function handlePush(value: string) {
         stack.current.push(value);
-
         setCurrentStack(stack.current.expose.stack);
     }
 

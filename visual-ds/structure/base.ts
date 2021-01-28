@@ -17,7 +17,7 @@ export class DSObservable<TExpose> { // Generic which is used by DSObservable
     #exposeFn: () => TExpose;
 
     constructor() {
-        this.#handlers = {}; // 
+        this.#handlers = {};
     }
 
     notifyChange(action: string, e: ActionArgs): void {
@@ -38,6 +38,7 @@ export class DSObservable<TExpose> { // Generic which is used by DSObservable
     }
 
     get expose(): TExpose {
-        return this.#exposeFn();
+        return this.#exposeFn(); 
     }
+    // 자료구조의 객체를 반환.
 }

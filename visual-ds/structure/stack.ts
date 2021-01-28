@@ -16,8 +16,12 @@ export class Stack<T extends Visualizable = Visualizable>
         this.stk = [];
 
         this.onExpose(() => ({
-            stack: [...this.stk]
+            stack: [...this.stk] 
         }));
+        // 형태 : 객체
+        // 자료형 : T[]
+        // this.stk 값을 산개시켜줌.
+        // #exposeFn 함수가 된다.
     }
 
     push(value: T): void {
