@@ -18,12 +18,18 @@ const StackVisualizer = memo<StackVisualizerProps>(
             const node = renderer.current.node();
             container.current.appendChild(node);
 
-            return () => node.remove();
+            // console.log(renderer.current);
+
+            return () => {
+                container.current.removeChild(node);
+                renderer.current.remove();
+            };
         }, []);
 
         return <div ref={container}></div>;
     },
     () => {
+        //
         return false;
     }
 );
@@ -53,6 +59,8 @@ export default (function StackD3() {
     const stack = useRef<Stack>(new Stack());
 
     const [currentStack, setCurrentStack] = useState([]);
+
+    useEffect(() => {}, []);
 
     function handlePush(value: string) {
         stack.current.push(value);

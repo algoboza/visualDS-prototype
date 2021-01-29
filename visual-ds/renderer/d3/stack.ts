@@ -26,6 +26,8 @@ export class StackD3Renderer {
 
     private drawers: Drawer[];
 
+    private handlers = {};
+
     props: StackD3RendererProps;
 
     constructor(stack: Stack, props?: StackD3RendererProps) {
@@ -34,32 +36,36 @@ export class StackD3Renderer {
         }
 
         this.stack = stack;
-        this.stack.addActionHandler("push", this.onPush.bind(this));
-        this.stack.addActionHandler("pop", this.onPop.bind(this));
+        this.handlers["push"] = this.onPush.bind(this);
+        this.handlers["pop"] = this.onPop.bind(this);
+        this.stack.addActionHandler("push", this.handlers["push"]);
+        this.stack.addActionHandler("pop", this.handlers["pop"]);
 
         this.props = makeProps(
-            props,
             {
+                ...props,
                 cellSpace: 5,
                 cellWidth: 40,
                 cellHeight: 30,
                 flyDistance: 40
             },
             () => {
-                this.update();
+                this.forceUpdate();
             }
         );
 
-        console.log(this.props);
-
         this.svg = d3.create("svg").attr("viewBox", "0 0 800 200");
-        this.root = this.svg.append("g").attr("transform", "translate(50, 0)");
 
-        this.drawers = [BoxDrawer, TextDrawer, IndexDrawer, PointerDrawer, LabelDrawer].map(
-            (D) => new D(this.root, this.props)
-        );
-
+        this.init();
         this.update();
+    }
+
+    remove(): void {
+        this.root.remove();
+        this.root = null;
+
+        this.stack.removeActionHandler("push", this.handlers["push"]);
+        this.stack.removeActionHandler("pop", this.handlers["pop"]);
     }
 
     onPush(): void {
@@ -70,14 +76,40 @@ export class StackD3Renderer {
         this.update();
     }
 
+    init(): void {
+        this.root = this.svg.append("g").attr("transform", "translate(50, 0)");
+
+        this.drawers = [BoxDrawer, TextDrawer, IndexDrawer, PointerDrawer, LabelDrawer].map(
+            (D) => new D(this.root, this.props)
+        );
+    }
+
     update(): void {
+        if (!this.alive) {
+            return;
+        }
+
         const stk = this.stack.expose.stack;
 
         this.drawers.forEach((d) => d.update(stk));
     }
 
+    forceUpdate(): void {
+        if (!this.alive) {
+            return;
+        }
+
+        this.svg.select("*").remove();
+        this.init();
+        this.update();
+    }
+
     node(): SVGSVGElement {
         return this.svg.node();
+    }
+
+    get alive(): boolean {
+        return this.root !== null;
     }
 }
 
@@ -104,13 +136,15 @@ abstract class StaticDrawer extends Drawer {
     update() {}
 }
 
+function transition() {
+    return d3.transition().duration(750).ease(d3.easeCubicOut);
+}
+
 class BoxDrawer extends Drawer {
     update(stack: Visualizable[]) {
         const group = this.group;
 
         const { cellWidth, cellHeight, cellSpace, flyDistance } = this.props;
-
-        const trans = d3.transition().duration(750).ease(d3.easeCubicOut);
 
         group.attr("fill", "#660eb3");
 
@@ -125,7 +159,8 @@ class BoxDrawer extends Drawer {
                         .attr("opacity", 0.0)
                         .call((enter) =>
                             enter
-                                .transition(trans)
+
+                                .transition(transition())
                                 .attr("x", (_, i: number) => (cellWidth + cellSpace) * i)
                                 .attr("opacity", 1.0)
                         ),
@@ -133,7 +168,7 @@ class BoxDrawer extends Drawer {
                 (exit) =>
                     exit.call((exit) =>
                         exit
-                            .transition(trans)
+                            .transition(transition())
                             .attr("opacity", 0.0)
                             .attr("x", (_, i: number) => (cellWidth + cellSpace) * i + flyDistance)
                             .remove()
@@ -151,8 +186,6 @@ class TextDrawer extends Drawer {
         const group = this.group;
 
         const { cellWidth, cellHeight, cellSpace, flyDistance } = this.props;
-
-        const trans = d3.transition().duration(750).ease(d3.easeCubicOut);
 
         group.attr("fill", "white").attr("text-anchor", "middle");
 
@@ -172,7 +205,7 @@ class TextDrawer extends Drawer {
                         .attr("fill-opacity", 0.0)
                         .call((enter) =>
                             enter
-                                .transition(trans)
+                                .transition(transition())
                                 .attr("x", (_, i: number) => (cellWidth + cellSpace) * i + 20)
                                 .attr("fill-opacity", 1.0)
                         ),
@@ -180,11 +213,12 @@ class TextDrawer extends Drawer {
                 (exit) =>
                     exit.call((exit) =>
                         exit
-                            .transition(trans)
+                            .transition(transition())
                             .attr("fill-opacity", 0.0)
                             .attr(
                                 "x",
-                                (_, i: number) => (cellWidth + cellSpace) * i + cellWidth / 2 + 40
+                                (_, i: number) =>
+                                    (cellWidth + cellSpace) * i + cellWidth / 2 + flyDistance
                             )
                             .remove()
                     )
@@ -201,8 +235,6 @@ class IndexDrawer extends Drawer {
 
         const { cellWidth, cellHeight, cellSpace } = this.props;
 
-        const trans = d3.transition().duration(750).ease(d3.easeCubicOut);
-
         group.attr("text-anchor", "middle").attr("font-size", 13).attr("fill", "grey");
 
         return group
@@ -218,12 +250,12 @@ class IndexDrawer extends Drawer {
                         .attr("y", cellHeight - 10 - 30)
                         .call((enter) =>
                             enter
-                                .transition(trans)
+                                .transition(transition())
                                 .attr("fill-opacity", 1.0)
                                 .attr("y", cellHeight - 10)
                         ),
                 (update) => update,
-                (exit) => exit.transition(trans).attr("fill-opacity", 0.0).remove()
+                (exit) => exit.transition(transition()).attr("fill-opacity", 0.0).remove()
             )
             .text((_, i: number) => i)
             .attr("dy", "0.35em");
@@ -259,8 +291,6 @@ class PointerDrawer extends Drawer {
 
         const { cellWidth, cellHeight, cellSpace } = this.props;
 
-        const trans = d3.transition().duration(750).ease(d3.easeCubicOut);
-
         group
             .selectAll("path.topptr")
             .data([stack.length])
@@ -275,7 +305,7 @@ class PointerDrawer extends Drawer {
                     update
                         .call((update) =>
                             update
-                                .transition(trans)
+                                .transition(transition())
                                 .attr(
                                     "transform",
                                     (d) =>
@@ -296,7 +326,7 @@ class PointerDrawer extends Drawer {
                 (update) =>
                     update.call((update) =>
                         update
-                            .transition(trans)
+                            .transition(transition())
                             .attr("x", (d) => (cellWidth + cellSpace) * d - cellSpace)
                     ),
                 (exit) => exit
