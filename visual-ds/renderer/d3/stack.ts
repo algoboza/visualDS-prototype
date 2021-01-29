@@ -43,11 +43,11 @@ export class StackD3Renderer {
 
         this.props = makeProps(
             {
-                ...props,
                 cellSpace: 5,
                 cellWidth: 40,
                 cellHeight: 30,
-                flyDistance: 40
+                flyDistance: 40,
+                ...props
             },
             () => {
                 this.forceUpdate();
@@ -140,6 +140,8 @@ function transition() {
     return d3.transition().duration(750).ease(d3.easeCubicOut);
 }
 
+const INDEX_HEIGHT = 30;
+
 class BoxDrawer extends Drawer {
     update(stack: Visualizable[]) {
         const group = this.group;
@@ -156,14 +158,7 @@ class BoxDrawer extends Drawer {
                     enter
                         .append("rect")
                         .attr("x", (_, i: number) => (cellWidth + cellSpace) * i + flyDistance)
-                        .attr("opacity", 0.0)
-                        .call((enter) =>
-                            enter
-
-                                .transition(transition())
-                                .attr("x", (_, i: number) => (cellWidth + cellSpace) * i)
-                                .attr("opacity", 1.0)
-                        ),
+                        .attr("opacity", 0.0),
                 (update) => update,
                 (exit) =>
                     exit.call((exit) =>
@@ -174,8 +169,13 @@ class BoxDrawer extends Drawer {
                             .remove()
                     )
             )
-
-            .attr("y", 30)
+            .call((group) =>
+                group
+                    .transition(transition())
+                    .attr("x", (_, i: number) => (cellWidth + cellSpace) * i)
+                    .attr("opacity", 1.0)
+            )
+            .attr("y", INDEX_HEIGHT)
             .attr("height", cellHeight)
             .attr("width", cellWidth);
     }
@@ -189,6 +189,11 @@ class TextDrawer extends Drawer {
 
         group.attr("fill", "white").attr("text-anchor", "middle");
 
+        const flyX = (_: undefined, idx: number) =>
+            (cellWidth + cellSpace) * idx + cellWidth / 2 + flyDistance;
+        const normalX = (_: undefined, idx: number) =>
+            (cellWidth + cellSpace) * idx + cellWidth / 2;
+
         return group
             .selectAll("text.val")
             .data(stack)
@@ -197,34 +202,23 @@ class TextDrawer extends Drawer {
                     enter
                         .append("text")
                         .attr("class", "val")
-                        .attr(
-                            "x",
-                            (_, i: number) =>
-                                (cellWidth + cellSpace) * i + cellWidth / 2 + flyDistance
-                        )
-                        .attr("fill-opacity", 0.0)
-                        .call((enter) =>
-                            enter
-                                .transition(transition())
-                                .attr("x", (_, i: number) => (cellWidth + cellSpace) * i + 20)
-                                .attr("fill-opacity", 1.0)
-                        ),
+                        .attr("x", flyX)
+                        .attr("fill-opacity", 0.0),
                 (update) => update,
                 (exit) =>
                     exit.call((exit) =>
                         exit
                             .transition(transition())
                             .attr("fill-opacity", 0.0)
-                            .attr(
-                                "x",
-                                (_, i: number) =>
-                                    (cellWidth + cellSpace) * i + cellWidth / 2 + flyDistance
-                            )
+                            .attr("x", flyX)
                             .remove()
                     )
             )
+            .call((group) =>
+                group.transition(transition()).attr("x", normalX).attr("fill-opacity", 1.0)
+            )
             .text((d) => d.toString())
-            .attr("y", cellHeight + cellHeight / 2)
+            .attr("y", INDEX_HEIGHT + cellHeight / 2)
             .attr("dy", "0.35em");
     }
 }
@@ -233,7 +227,7 @@ class IndexDrawer extends Drawer {
     update(stack: Visualizable[]) {
         const group = this.group;
 
-        const { cellWidth, cellHeight, cellSpace } = this.props;
+        const { cellWidth, cellSpace } = this.props;
 
         group.attr("text-anchor", "middle").attr("font-size", 13).attr("fill", "grey");
 
@@ -245,20 +239,20 @@ class IndexDrawer extends Drawer {
                     enter
                         .append("text")
                         .attr("class", "idx")
-                        .attr("x", (_, i: number) => (cellWidth + cellSpace) * i + 20)
                         .attr("fill-opacity", 0.0)
-                        .attr("y", cellHeight - 10 - 30)
-                        .call((enter) =>
-                            enter
-                                .transition(transition())
-                                .attr("fill-opacity", 1.0)
-                                .attr("y", cellHeight - 10)
-                        ),
+                        .attr("y", INDEX_HEIGHT - 10 - 30),
                 (update) => update,
                 (exit) => exit.transition(transition()).attr("fill-opacity", 0.0).remove()
             )
             .text((_, i: number) => i)
-            .attr("dy", "0.35em");
+            .attr("dy", "0.35em")
+            .attr("x", (_, i: number) => (cellWidth + cellSpace) * i + cellWidth / 2)
+            .call((group) =>
+                group
+                    .transition(transition())
+                    .attr("fill-opacity", 1.0)
+                    .attr("y", INDEX_HEIGHT - 10)
+            );
     }
 }
 
@@ -272,7 +266,7 @@ class LabelDrawer extends StaticDrawer {
             .text("Index")
             .attr("font-size", 10)
             .attr("x", -10)
-            .attr("y", cellHeight - 5)
+            .attr("y", INDEX_HEIGHT - 5)
             .attr("text-anchor", "end");
 
         group
@@ -280,7 +274,8 @@ class LabelDrawer extends StaticDrawer {
             .text("Data")
             .attr("font-size", 10)
             .attr("x", -10)
-            .attr("y", cellHeight * 2 - 5)
+            .attr("y", INDEX_HEIGHT + cellHeight / 2 - 5)
+            .attr("dy", "0.35em")
             .attr("text-anchor", "end");
     }
 }
