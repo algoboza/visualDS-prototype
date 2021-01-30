@@ -37,6 +37,10 @@ export class Stack<T = unknown> extends DSBase<StackExpose<T>, ChangeArgs<T>> {
         this.makeExpose(() => ({
             stack: [...this.stk]
         }));
+        // 형태 : 객체
+        // 자료형 : T[]
+        // this.stk 값을 산개시켜줌.
+        // #exposeFn 함수가 된다.
     }
 
     public push(value: T): void {
