@@ -1,4 +1,4 @@
-import { Visualizable } from "@/visual-ds/structure/base";
+import { DSObserver, getExpose } from "@/visual-ds/structure/base";
 import { Stack } from "@/visual-ds/structure/stack";
 import * as d3 from "d3";
 import { makeProps } from "./utils/prop";
@@ -19,12 +19,14 @@ interface StackD3RendererProps {
 }
 
 export class StackD3Renderer {
-    private stack: Stack;
+    private stack: Stack<string>;
 
     private root: GSelection;
     private svg: Selection<SVGSVGElement>;
 
     private drawers: Drawer[];
+
+    private observer: DSObserver;
 
     props: StackD3RendererProps;
 
@@ -34,32 +36,34 @@ export class StackD3Renderer {
         }
 
         this.stack = stack;
-        this.stack.addActionHandler("push", this.onPush.bind(this));
-        this.stack.addActionHandler("pop", this.onPop.bind(this));
+        this.observer = this.update.bind(this);
+        this.stack.subscribe(this.observer);
 
+        // prop 들을 등록하고 prop 변경시의 동작을 지정
         this.props = makeProps(
-            props,
             {
                 cellSpace: 5,
                 cellWidth: 40,
                 cellHeight: 30,
-                flyDistance: 40
+                flyDistance: 40,
+                ...props
             },
             () => {
-                this.update();
+                this.forceUpdate();
             }
         );
 
-        console.log(this.props);
-
         this.svg = d3.create("svg").attr("viewBox", "0 0 800 200");
-        this.root = this.svg.append("g").attr("transform", "translate(50, 0)");
 
-        this.drawers = [BoxDrawer, TextDrawer, IndexDrawer, PointerDrawer, LabelDrawer].map(
-            (D) => new D(this.root, this.props)
-        );
-
+        this.init();
         this.update();
+    }
+
+    remove(): void {
+        this.root.remove();
+        this.root = null;
+
+        this.stack.unsubscribe(this.observer);
     }
 
     onPush(): void {
@@ -70,17 +74,48 @@ export class StackD3Renderer {
         this.update();
     }
 
+    init(): void {
+        this.root = this.svg.append("g").attr("transform", "translate(50, 0)");
+
+        // Drawer들 한번에 호출
+        this.drawers = [BoxDrawer, TextDrawer, IndexDrawer, PointerDrawer, LabelDrawer].map(
+            (D) => new D(this.root, this.props)
+        );
+    }
+
     update(): void {
-        const stk = this.stack.expose.stack;
+        if (!this.alive) {
+            return;
+        }
+
+        const stk = getExpose(this.stack).stack;
 
         this.drawers.forEach((d) => d.update(stk));
+    }
+
+    forceUpdate(): void {
+        if (!this.alive) {
+            return;
+        }
+
+        this.svg.select("*").remove();
+        this.init();
+        this.update();
     }
 
     node(): SVGSVGElement {
         return this.svg.node();
     }
+
+    get alive(): boolean {
+        return this.root !== null;
+    }
 }
 
+/**
+ * 화면에 그리는 정보들 중 같은 유형의 것들은 하나의 Drawer에서 맡아서 담당한다.
+ * Drawer는 하나의 group(SVG g 태그)을 가지고 그 안에 모든 것을 그린다.
+ */
 abstract class Drawer {
     readonly group: GSelection;
     readonly props: StackD3RendererProps;
@@ -95,22 +130,32 @@ abstract class Drawer {
         this.group.remove();
     }
 
+    // 초기 실행시에 그리기
     init(): void {}
 
-    abstract update(data: Visualizable[]): void;
+    // 데이터 변경시에 그리기
+    abstract update(data: unknown[]): void;
 }
 
+/**
+ * Update 동작이 없는 Drawer
+ */
 abstract class StaticDrawer extends Drawer {
     update() {}
 }
 
+function transition() {
+    return d3.transition().duration(750).ease(d3.easeCubicOut);
+}
+
+const INDEX_HEIGHT = 30;
+
+// 데이터 표시하는 상자의 Drawer
 class BoxDrawer extends Drawer {
-    update(stack: Visualizable[]) {
+    update(stack: unknown[]) {
         const group = this.group;
 
         const { cellWidth, cellHeight, cellSpace, flyDistance } = this.props;
-
-        const trans = d3.transition().duration(750).ease(d3.easeCubicOut);
 
         group.attr("fill", "#660eb3");
 
@@ -122,39 +167,42 @@ class BoxDrawer extends Drawer {
                     enter
                         .append("rect")
                         .attr("x", (_, i: number) => (cellWidth + cellSpace) * i + flyDistance)
-                        .attr("opacity", 0.0)
-                        .call((enter) =>
-                            enter
-                                .transition(trans)
-                                .attr("x", (_, i: number) => (cellWidth + cellSpace) * i)
-                                .attr("opacity", 1.0)
-                        ),
+                        .attr("opacity", 0.0),
                 (update) => update,
                 (exit) =>
                     exit.call((exit) =>
                         exit
-                            .transition(trans)
+                            .transition(transition())
                             .attr("opacity", 0.0)
                             .attr("x", (_, i: number) => (cellWidth + cellSpace) * i + flyDistance)
                             .remove()
                     )
             )
-
-            .attr("y", 30)
+            .call((group) =>
+                group
+                    .transition(transition())
+                    .attr("x", (_, i: number) => (cellWidth + cellSpace) * i)
+                    .attr("opacity", 1.0)
+            )
+            .attr("y", INDEX_HEIGHT)
             .attr("height", cellHeight)
             .attr("width", cellWidth);
     }
 }
 
+// 데이터의 문자를 그리는 Drawer
 class TextDrawer extends Drawer {
-    update(stack: Visualizable[]) {
+    update(stack: unknown[]) {
         const group = this.group;
 
         const { cellWidth, cellHeight, cellSpace, flyDistance } = this.props;
 
-        const trans = d3.transition().duration(750).ease(d3.easeCubicOut);
-
         group.attr("fill", "white").attr("text-anchor", "middle");
+
+        const flyX = (_: undefined, idx: number) =>
+            (cellWidth + cellSpace) * idx + cellWidth / 2 + flyDistance;
+        const normalX = (_: undefined, idx: number) =>
+            (cellWidth + cellSpace) * idx + cellWidth / 2;
 
         return group
             .selectAll("text.val")
@@ -164,44 +212,33 @@ class TextDrawer extends Drawer {
                     enter
                         .append("text")
                         .attr("class", "val")
-                        .attr(
-                            "x",
-                            (_, i: number) =>
-                                (cellWidth + cellSpace) * i + cellWidth / 2 + flyDistance
-                        )
-                        .attr("fill-opacity", 0.0)
-                        .call((enter) =>
-                            enter
-                                .transition(trans)
-                                .attr("x", (_, i: number) => (cellWidth + cellSpace) * i + 20)
-                                .attr("fill-opacity", 1.0)
-                        ),
+                        .attr("x", flyX)
+                        .attr("fill-opacity", 0.0),
                 (update) => update,
                 (exit) =>
                     exit.call((exit) =>
                         exit
-                            .transition(trans)
+                            .transition(transition())
                             .attr("fill-opacity", 0.0)
-                            .attr(
-                                "x",
-                                (_, i: number) => (cellWidth + cellSpace) * i + cellWidth / 2 + 40
-                            )
+                            .attr("x", flyX)
                             .remove()
                     )
             )
+            .call((group) =>
+                group.transition(transition()).attr("x", normalX).attr("fill-opacity", 1.0)
+            )
             .text((d) => d.toString())
-            .attr("y", cellHeight + cellHeight / 2)
+            .attr("y", INDEX_HEIGHT + cellHeight / 2)
             .attr("dy", "0.35em");
     }
 }
 
+// 상단 인덱스 표시를 그리는 Drawer
 class IndexDrawer extends Drawer {
-    update(stack: Visualizable[]) {
+    update(stack: unknown[]) {
         const group = this.group;
 
-        const { cellWidth, cellHeight, cellSpace } = this.props;
-
-        const trans = d3.transition().duration(750).ease(d3.easeCubicOut);
+        const { cellWidth, cellSpace } = this.props;
 
         group.attr("text-anchor", "middle").attr("font-size", 13).attr("fill", "grey");
 
@@ -213,23 +250,24 @@ class IndexDrawer extends Drawer {
                     enter
                         .append("text")
                         .attr("class", "idx")
-                        .attr("x", (_, i: number) => (cellWidth + cellSpace) * i + 20)
                         .attr("fill-opacity", 0.0)
-                        .attr("y", cellHeight - 10 - 30)
-                        .call((enter) =>
-                            enter
-                                .transition(trans)
-                                .attr("fill-opacity", 1.0)
-                                .attr("y", cellHeight - 10)
-                        ),
+                        .attr("y", INDEX_HEIGHT - 10 - 30),
                 (update) => update,
-                (exit) => exit.transition(trans).attr("fill-opacity", 0.0).remove()
+                (exit) => exit.transition(transition()).attr("fill-opacity", 0.0).remove()
             )
             .text((_, i: number) => i)
-            .attr("dy", "0.35em");
+            .attr("dy", "0.35em")
+            .attr("x", (_, i: number) => (cellWidth + cellSpace) * i + cellWidth / 2)
+            .call((group) =>
+                group
+                    .transition(transition())
+                    .attr("fill-opacity", 1.0)
+                    .attr("y", INDEX_HEIGHT - 10)
+            );
     }
 }
 
+// 좌측의 범례를 표시하는 Drawer
 class LabelDrawer extends StaticDrawer {
     init() {
         const group = this.group;
@@ -240,7 +278,7 @@ class LabelDrawer extends StaticDrawer {
             .text("Index")
             .attr("font-size", 10)
             .attr("x", -10)
-            .attr("y", cellHeight - 5)
+            .attr("y", INDEX_HEIGHT - 5)
             .attr("text-anchor", "end");
 
         group
@@ -248,18 +286,18 @@ class LabelDrawer extends StaticDrawer {
             .text("Data")
             .attr("font-size", 10)
             .attr("x", -10)
-            .attr("y", cellHeight * 2 - 5)
+            .attr("y", INDEX_HEIGHT + cellHeight / 2 - 5)
+            .attr("dy", "0.35em")
             .attr("text-anchor", "end");
     }
 }
 
+// 현재 Top 을 표시하는 Drawer
 class PointerDrawer extends Drawer {
-    update(stack: Visualizable[]) {
+    update(stack: unknown[]) {
         const group = this.group;
 
         const { cellWidth, cellHeight, cellSpace } = this.props;
-
-        const trans = d3.transition().duration(750).ease(d3.easeCubicOut);
 
         group
             .selectAll("path.topptr")
@@ -275,7 +313,7 @@ class PointerDrawer extends Drawer {
                     update
                         .call((update) =>
                             update
-                                .transition(trans)
+                                .transition(transition())
                                 .attr(
                                     "transform",
                                     (d) =>
@@ -296,7 +334,7 @@ class PointerDrawer extends Drawer {
                 (update) =>
                     update.call((update) =>
                         update
-                            .transition(trans)
+                            .transition(transition())
                             .attr("x", (d) => (cellWidth + cellSpace) * d - cellSpace)
                     ),
                 (exit) => exit
