@@ -6,23 +6,27 @@ import { getExpose } from "@/visual-ds/structure/base";
 
 interface StackVisualizerProps {
     stackRef: MutableRefObject<Stack>;
+    // useRef 로 얻어온 current 객체
 }
 
 /**
  * 스택을 prop으로 받아서 렌더링
  */
 const StackVisualizer = memo<StackVisualizerProps>(
+    // memo 함수를 통해 Visualizer 컴포넌트 리렌더링 효율 향상
     function Visualizer({ stackRef }) {
+        // props 로 Stack 자료구조의 current 객체 받기.
         const renderer = useRef<StackD3Renderer>(null);
+        // renderer 형은 D3 형태. D3 객체 구조를 받아오는 것인가???
         const container = useRef<HTMLDivElement>(null);
+        // container 형은 HTMLDivElement 형태. 일반적인 HTML 태그.
 
         useEffect(() => {
             renderer.current = new StackD3Renderer(stackRef.current);
-            const node = renderer.current.node();
-            container.current.appendChild(node);
-
+            const node = renderer.current.node(); // SVG Element 하나를 만드나???
+            container.current.appendChild(node); // appent 시킴.
             return () => {
-                renderer.current.remove();
+                renderer.current.remove();// Unmount 시, clean-up.
             };
         }, []);
 
@@ -55,10 +59,14 @@ const StackSerializer = <T extends unknown>(props: { data: T[] }) => {
 };
 
 export default (function StackD3() {
+    // default 스택 페이지
     // 구현한 스택 자료구조는 불변성이 없으므로 Ref로 사용
     const stack = useRef<Stack>(new Stack());
+    // 자료형 : Stack
+    // Stack 자료구조의 기본 형태를 갖는다.
 
     const [currentStack, setCurrentStack] = useState([]);
+    // currentStack 기본 값은 [], setCurrentStack 으로 set 가능.
 
     useEffect(() => {}, []);
 

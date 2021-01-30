@@ -111,4 +111,5 @@ export function getExpose<TExpose>(structure: DSBase<TExpose>): TExpose {
     if (structure[ExposeKey] !== null) {
         return structure[ExposeKey]();
     }
+    // 자료구조의 객체를 반환.
 }
