@@ -2,6 +2,7 @@ import { DSObserver, getExpose } from "@/visual-ds/structure/base";
 import { Stack } from "@/visual-ds/structure/stack";
 import * as d3 from "d3";
 import { makeProps } from "./utils/prop";
+import { translate } from "./utils/svg";
 
 type Selection<T extends d3.BaseType = undefined, P extends d3.BaseType = null> = d3.Selection<
     T,
@@ -11,11 +12,13 @@ type Selection<T extends d3.BaseType = undefined, P extends d3.BaseType = null> 
 >;
 type GSelection = Selection<SVGGElement>;
 
-interface StackD3RendererProps {
+export interface StackD3RendererProps {
     cellSpace?: number;
     cellWidth?: number;
     cellHeight?: number;
     flyDistance?: number;
+    showLabel?: boolean;
+    showIndex?: boolean;
 }
 
 export class StackD3Renderer {
@@ -46,6 +49,8 @@ export class StackD3Renderer {
                 cellWidth: 40,
                 cellHeight: 30,
                 flyDistance: 40,
+                showIndex: true,
+                showLabel: true,
                 ...props
             },
             () => {
@@ -61,6 +66,7 @@ export class StackD3Renderer {
 
     remove(): void {
         this.root.remove();
+        this.svg.remove();
         this.root = null;
 
         this.stack.unsubscribe(this.observer);
@@ -75,7 +81,7 @@ export class StackD3Renderer {
     }
 
     init(): void {
-        this.root = this.svg.append("g").attr("transform", "translate(50, 0)");
+        this.root = this.svg.append("g");
 
         // Drawer들 한번에 호출
         this.drawers = [BoxDrawer, TextDrawer, IndexDrawer, PointerDrawer, LabelDrawer].map(
@@ -149,24 +155,64 @@ function transition() {
 }
 
 const INDEX_HEIGHT = 30;
+const LABEL_WIDTH = 50;
+const LABEL_BOX_SPACE = 5;
+
+function getBoxStartY(props: StackD3RendererProps) {
+    const { showIndex } = props;
+    if (showIndex) {
+        return INDEX_HEIGHT;
+    } else {
+        return 0;
+    }
+}
+
+function getBoxStartX(props: StackD3RendererProps) {
+    const { showLabel } = props;
+
+    if (showLabel) {
+        return LABEL_WIDTH;
+    } else {
+        return 0;
+    }
+}
+
+function getCellX(props: StackD3RendererProps, index: number) {
+    const { cellWidth, cellSpace } = props;
+
+    return getBoxStartX(props) + (cellWidth + cellSpace) * index;
+}
+
+function getBoxEndY(props: StackD3RendererProps) {
+    const { cellHeight } = props;
+
+    return getBoxStartY(props) + cellHeight;
+}
+
+function getTopX(props: StackD3RendererProps, len: number) {
+    if (len === 0) {
+        return getCellX(props, 0);
+    }
+    return getCellX(props, len) - props.cellSpace;
+}
 
 // 데이터 표시하는 상자의 Drawer
 class BoxDrawer extends Drawer {
     update(stack: unknown[]) {
         const group = this.group;
 
-        const { cellWidth, cellHeight, cellSpace, flyDistance } = this.props;
+        const { cellWidth, cellHeight, flyDistance } = this.props;
 
         group.attr("fill", "#660eb3");
 
-        return group
+        group
             .selectAll("rect")
             .data(stack)
             .join(
                 (enter) =>
                     enter
                         .append("rect")
-                        .attr("x", (_, i: number) => (cellWidth + cellSpace) * i + flyDistance)
+                        .attr("x", (_, i: number) => getCellX(this.props, i) + flyDistance)
                         .attr("opacity", 0.0),
                 (update) => update,
                 (exit) =>
@@ -174,17 +220,17 @@ class BoxDrawer extends Drawer {
                         exit
                             .transition(transition())
                             .attr("opacity", 0.0)
-                            .attr("x", (_, i: number) => (cellWidth + cellSpace) * i + flyDistance)
+                            .attr("x", (_, i: number) => getCellX(this.props, i) + flyDistance)
                             .remove()
                     )
             )
             .call((group) =>
                 group
                     .transition(transition())
-                    .attr("x", (_, i: number) => (cellWidth + cellSpace) * i)
+                    .attr("x", (_, i: number) => getCellX(this.props, i))
                     .attr("opacity", 1.0)
             )
-            .attr("y", INDEX_HEIGHT)
+            .attr("y", getBoxStartY(this.props))
             .attr("height", cellHeight)
             .attr("width", cellWidth);
     }
@@ -195,14 +241,13 @@ class TextDrawer extends Drawer {
     update(stack: unknown[]) {
         const group = this.group;
 
-        const { cellWidth, cellHeight, cellSpace, flyDistance } = this.props;
+        const { cellWidth, cellHeight, flyDistance } = this.props;
 
         group.attr("fill", "white").attr("text-anchor", "middle");
 
         const flyX = (_: undefined, idx: number) =>
-            (cellWidth + cellSpace) * idx + cellWidth / 2 + flyDistance;
-        const normalX = (_: undefined, idx: number) =>
-            (cellWidth + cellSpace) * idx + cellWidth / 2;
+            getCellX(this.props, idx) + cellWidth / 2 + flyDistance;
+        const normalX = (_: undefined, idx: number) => getCellX(this.props, idx) + cellWidth / 2;
 
         return group
             .selectAll("text.val")
@@ -228,7 +273,7 @@ class TextDrawer extends Drawer {
                 group.transition(transition()).attr("x", normalX).attr("fill-opacity", 1.0)
             )
             .text((d) => d.toString())
-            .attr("y", INDEX_HEIGHT + cellHeight / 2)
+            .attr("y", getBoxStartY(this.props) + cellHeight / 2)
             .attr("dy", "0.35em");
     }
 }
@@ -238,7 +283,11 @@ class IndexDrawer extends Drawer {
     update(stack: unknown[]) {
         const group = this.group;
 
-        const { cellWidth, cellSpace } = this.props;
+        const { cellWidth, showIndex } = this.props;
+
+        if (!showIndex) {
+            return;
+        }
 
         group.attr("text-anchor", "middle").attr("font-size", 13).attr("fill", "grey");
 
@@ -257,7 +306,7 @@ class IndexDrawer extends Drawer {
             )
             .text((_, i: number) => i)
             .attr("dy", "0.35em")
-            .attr("x", (_, i: number) => (cellWidth + cellSpace) * i + cellWidth / 2)
+            .attr("x", (_, i: number) => getCellX(this.props, i) + cellWidth / 2)
             .call((group) =>
                 group
                     .transition(transition())
@@ -271,22 +320,28 @@ class IndexDrawer extends Drawer {
 class LabelDrawer extends StaticDrawer {
     init() {
         const group = this.group;
-        const { cellHeight } = this.props;
+        const { cellHeight, showIndex, showLabel } = this.props;
 
-        group
-            .append("text")
-            .text("Index")
-            .attr("font-size", 10)
-            .attr("x", -10)
-            .attr("y", INDEX_HEIGHT - 5)
-            .attr("text-anchor", "end");
+        if (!showLabel) {
+            return;
+        }
+
+        if (showIndex) {
+            group
+                .append("text")
+                .text("Index")
+                .attr("font-size", 10)
+                .attr("x", getBoxStartX(this.props) - LABEL_BOX_SPACE)
+                .attr("y", getBoxStartY(this.props) - 5)
+                .attr("text-anchor", "end");
+        }
 
         group
             .append("text")
             .text("Data")
             .attr("font-size", 10)
-            .attr("x", -10)
-            .attr("y", INDEX_HEIGHT + cellHeight / 2 - 5)
+            .attr("x", getBoxStartX(this.props) - LABEL_BOX_SPACE)
+            .attr("y", getBoxStartY(this.props) + cellHeight / 2)
             .attr("dy", "0.35em")
             .attr("text-anchor", "end");
     }
@@ -297,8 +352,6 @@ class PointerDrawer extends Drawer {
     update(stack: unknown[]) {
         const group = this.group;
 
-        const { cellWidth, cellHeight, cellSpace } = this.props;
-
         group
             .selectAll("path.topptr")
             .data([stack.length])
@@ -308,18 +361,17 @@ class PointerDrawer extends Drawer {
                         .append("path")
                         .attr("class", "topptr")
                         .attr("d", "M7.41,15.41L12,10.83L16.59,15.41L18,14L12,8L6,14L7.41,15.41Z")
-                        .attr("transform", `translate(${-cellSpace - 12}, ${cellHeight * 2})`),
+                        .attr(
+                            "transform",
+                            translate(getTopX(this.props, 0) - 12, getBoxEndY(this.props))
+                        ),
                 (update) =>
                     update
                         .call((update) =>
                             update
                                 .transition(transition())
-                                .attr(
-                                    "transform",
-                                    (d) =>
-                                        `translate(${
-                                            (cellWidth + cellSpace) * d - cellSpace - 12
-                                        }, ${cellHeight * 2})`
+                                .attr("transform", (len) =>
+                                    translate(getTopX(this.props, len) - 12, getBoxEndY(this.props))
                                 )
                         )
                         .attr("fill-color", "red"),
@@ -330,18 +382,17 @@ class PointerDrawer extends Drawer {
             .selectAll("text.topptr")
             .data([stack.length])
             .join(
-                (enter) => enter.append("text").attr("class", "topptr").attr("x", -cellSpace),
+                (enter) =>
+                    enter.append("text").attr("class", "topptr").attr("x", getTopX(this.props, 0)),
                 (update) =>
                     update.call((update) =>
-                        update
-                            .transition(transition())
-                            .attr("x", (d) => (cellWidth + cellSpace) * d - cellSpace)
+                        update.transition(transition()).attr("x", (len) => getTopX(this.props, len))
                     ),
                 (exit) => exit
             )
             .text("TOP")
             .attr("text-anchor", "middle")
             .attr("dy", "0.75em")
-            .attr("y", cellHeight * (2 + 2 / 3));
+            .attr("y", getBoxEndY(this.props) + 20);
     }
 }
