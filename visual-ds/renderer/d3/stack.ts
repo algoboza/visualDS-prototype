@@ -1,4 +1,4 @@
-import { Visualizable } from "@/visual-ds/structure/base";
+import { DSObserver, getExpose } from "@/visual-ds/structure/base";
 import { Stack } from "@/visual-ds/structure/stack";
 import * as d3 from "d3";
 import { makeProps } from "./utils/prop";
@@ -19,14 +19,14 @@ interface StackD3RendererProps {
 }
 
 export class StackD3Renderer {
-    private stack: Stack;
+    private stack: Stack<string>;
 
     private root: GSelection;
     private svg: Selection<SVGSVGElement>;
 
     private drawers: Drawer[];
 
-    private handlers = {};
+    private observer: DSObserver;
 
     props: StackD3RendererProps;
 
@@ -36,11 +36,10 @@ export class StackD3Renderer {
         }
 
         this.stack = stack;
-        this.handlers["push"] = this.onPush.bind(this);
-        this.handlers["pop"] = this.onPop.bind(this);
-        this.stack.addActionHandler("push", this.handlers["push"]);
-        this.stack.addActionHandler("pop", this.handlers["pop"]);
+        this.observer = this.update.bind(this);
+        this.stack.subscribe(this.observer);
 
+        // prop 들을 등록하고 prop 변경시의 동작을 지정
         this.props = makeProps(
             {
                 cellSpace: 5,
@@ -64,8 +63,7 @@ export class StackD3Renderer {
         this.root.remove();
         this.root = null;
 
-        this.stack.removeActionHandler("push", this.handlers["push"]);
-        this.stack.removeActionHandler("pop", this.handlers["pop"]);
+        this.stack.unsubscribe(this.observer);
     }
 
     onPush(): void {
@@ -79,6 +77,7 @@ export class StackD3Renderer {
     init(): void {
         this.root = this.svg.append("g").attr("transform", "translate(50, 0)");
 
+        // Drawer들 한번에 호출
         this.drawers = [BoxDrawer, TextDrawer, IndexDrawer, PointerDrawer, LabelDrawer].map(
             (D) => new D(this.root, this.props)
         );
@@ -89,7 +88,7 @@ export class StackD3Renderer {
             return;
         }
 
-        const stk = this.stack.expose.stack;
+        const stk = getExpose(this.stack).stack;
 
         this.drawers.forEach((d) => d.update(stk));
     }
@@ -113,6 +112,10 @@ export class StackD3Renderer {
     }
 }
 
+/**
+ * 화면에 그리는 정보들 중 같은 유형의 것들은 하나의 Drawer에서 맡아서 담당한다.
+ * Drawer는 하나의 group(SVG g 태그)을 가지고 그 안에 모든 것을 그린다.
+ */
 abstract class Drawer {
     readonly group: GSelection;
     readonly props: StackD3RendererProps;
@@ -127,11 +130,16 @@ abstract class Drawer {
         this.group.remove();
     }
 
+    // 초기 실행시에 그리기
     init(): void {}
 
-    abstract update(data: Visualizable[]): void;
+    // 데이터 변경시에 그리기
+    abstract update(data: unknown[]): void;
 }
 
+/**
+ * Update 동작이 없는 Drawer
+ */
 abstract class StaticDrawer extends Drawer {
     update() {}
 }
@@ -142,8 +150,9 @@ function transition() {
 
 const INDEX_HEIGHT = 30;
 
+// 데이터 표시하는 상자의 Drawer
 class BoxDrawer extends Drawer {
-    update(stack: Visualizable[]) {
+    update(stack: unknown[]) {
         const group = this.group;
 
         const { cellWidth, cellHeight, cellSpace, flyDistance } = this.props;
@@ -181,8 +190,9 @@ class BoxDrawer extends Drawer {
     }
 }
 
+// 데이터의 문자를 그리는 Drawer
 class TextDrawer extends Drawer {
-    update(stack: Visualizable[]) {
+    update(stack: unknown[]) {
         const group = this.group;
 
         const { cellWidth, cellHeight, cellSpace, flyDistance } = this.props;
@@ -223,8 +233,9 @@ class TextDrawer extends Drawer {
     }
 }
 
+// 상단 인덱스 표시를 그리는 Drawer
 class IndexDrawer extends Drawer {
-    update(stack: Visualizable[]) {
+    update(stack: unknown[]) {
         const group = this.group;
 
         const { cellWidth, cellSpace } = this.props;
@@ -256,6 +267,7 @@ class IndexDrawer extends Drawer {
     }
 }
 
+// 좌측의 범례를 표시하는 Drawer
 class LabelDrawer extends StaticDrawer {
     init() {
         const group = this.group;
@@ -280,8 +292,9 @@ class LabelDrawer extends StaticDrawer {
     }
 }
 
+// 현재 Top 을 표시하는 Drawer
 class PointerDrawer extends Drawer {
-    update(stack: Visualizable[]) {
+    update(stack: unknown[]) {
         const group = this.group;
 
         const { cellWidth, cellHeight, cellSpace } = this.props;

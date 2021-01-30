@@ -2,12 +2,15 @@ import { memo, MutableRefObject, useEffect, useRef, useState, VFC } from "react"
 import { StackController } from "@/components/controllers/stack";
 import { Stack } from "@/visual-ds/structure/stack";
 import { StackD3Renderer } from "@/visual-ds/renderer/d3/stack";
-import { Visualizable } from "@/visual-ds/structure/base";
+import { getExpose } from "@/visual-ds/structure/base";
 
 interface StackVisualizerProps {
     stackRef: MutableRefObject<Stack>;
 }
 
+/**
+ * 스택을 prop으로 받아서 렌더링
+ */
 const StackVisualizer = memo<StackVisualizerProps>(
     function Visualizer({ stackRef }) {
         const renderer = useRef<StackD3Renderer>(null);
@@ -18,10 +21,7 @@ const StackVisualizer = memo<StackVisualizerProps>(
             const node = renderer.current.node();
             container.current.appendChild(node);
 
-            // console.log(renderer.current);
-
             return () => {
-                container.current.removeChild(node);
                 renderer.current.remove();
             };
         }, []);
@@ -29,14 +29,13 @@ const StackVisualizer = memo<StackVisualizerProps>(
         return <div ref={container}></div>;
     },
     () => {
-        //
         return false;
     }
 );
 
-const StackSerializer = (props: { data: Visualizable[] }) => {
+const StackSerializer = <T extends unknown>(props: { data: T[] }) => {
     const { data = [] } = props;
-    function serialize(data: Visualizable[]) {
+    function serialize(data: T[]) {
         let ret = "";
 
         ret += data.length + "\n";
@@ -56,6 +55,7 @@ const StackSerializer = (props: { data: Visualizable[] }) => {
 };
 
 export default (function StackD3() {
+    // 구현한 스택 자료구조는 불변성이 없으므로 Ref로 사용
     const stack = useRef<Stack>(new Stack());
 
     const [currentStack, setCurrentStack] = useState([]);
@@ -65,13 +65,13 @@ export default (function StackD3() {
     function handlePush(value: string) {
         stack.current.push(value);
 
-        setCurrentStack(stack.current.expose.stack);
+        setCurrentStack(getExpose(stack.current).stack);
     }
 
     function handlePop() {
         stack.current.pop();
 
-        setCurrentStack(stack.current.expose.stack);
+        setCurrentStack(getExpose(stack.current).stack);
     }
 
     return (

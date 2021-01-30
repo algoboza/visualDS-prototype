@@ -53,9 +53,7 @@ export default (function StackSVG() {
 
         container.current.appendChild(stackSVGRenderer.node);
 
-        return () => {
-            container.current.removeChild(stackSVGRenderer.node);
-        };
+        return () => {};
     }, []);
 
     function handlePush(value: string) {

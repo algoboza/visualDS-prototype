@@ -1,6 +1,6 @@
 import { Element, Svg, SVG } from "@svgdotjs/svg.js";
 import { Visualizable } from "../../structure/base";
-import { Stack, StackExpose } from "../../structure/stack";
+import { Stack } from "../../structure/stack";
 
 interface Cell {
     box: Element;
@@ -9,7 +9,6 @@ interface Cell {
 
 export class StackSVGRenderer {
     private stack: Stack;
-    private stackExpose: StackExpose;
     private draw: Svg;
 
     private cells: Cell[];
@@ -18,13 +17,13 @@ export class StackSVGRenderer {
     constructor(stack: Stack) {
         this.stack = stack;
 
-        this.stack.addActionHandler("push", (e) => {
-            this.onPush(e.value);
+        this.stack.subscribe((args) => {
+            if (args.type === "push") {
+                this.onPush(args.value + "");
+            } else if (args.type === "pop") {
+                this.onPop();
+            }
         });
-        this.stack.addActionHandler("pop", () => {
-            this.onPop();
-        });
-        this.stackExpose = stack.expose;
 
         this.cells = [];
         this.yPointer = 0;
@@ -69,9 +68,7 @@ export class StackSVGRenderer {
         cell.box.remove();
     }
 
-    redraw(): void {
-        console.log(this.cells);
-    }
+    redraw(): void {}
 
     get node(): SVGSVGElement {
         return this.draw.node;

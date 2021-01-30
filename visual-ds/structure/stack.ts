@@ -1,12 +1,28 @@
-import { DSBase, Visualizable, DSObservable } from "./base";
+import { DSBase } from "./base";
 
-export interface StackExpose<T extends Visualizable = Visualizable> {
+/**
+ * Expose 시킬 내부 정보
+ */
+export interface StackExpose<T> {
     stack: T[];
 }
 
-export class Stack<T extends Visualizable = Visualizable>
-    extends DSObservable<StackExpose<T>>
-    implements DSBase {
+interface PushArgs<T> {
+    type: "push";
+    value: T;
+}
+
+interface PopArgs<T> {
+    type: "pop";
+    value: T;
+}
+
+/**
+ * 변경을 통지 할 때의 파라미터
+ */
+type ChangeArgs<T> = PushArgs<T> | PopArgs<T>;
+
+export class Stack<T = unknown> extends DSBase<StackExpose<T>, ChangeArgs<T>> {
     public readonly name = "Stack";
 
     private stk: T[];
@@ -15,23 +31,26 @@ export class Stack<T extends Visualizable = Visualizable>
         super();
         this.stk = [];
 
-        this.onExpose(() => ({
+        /**
+         * Expose 시에 노출할 내부 정보들을 등록한다.
+         */
+        this.makeExpose(() => ({
             stack: [...this.stk]
         }));
     }
 
-    push(value: T): void {
+    public push(value: T): void {
         this.stk.push(value);
-        this.notifyChange("push", { value });
+        this.notifyChange({ type: "push", value: value });
     }
 
-    pop(): T {
+    public pop(): T {
         const value = this.stk.pop();
-        this.notifyChange("pop", { value });
+        this.notifyChange({ type: "pop", value: value });
         return value;
     }
 
-    size(): number {
+    public size(): number {
         return this.stk.length;
     }
 }
