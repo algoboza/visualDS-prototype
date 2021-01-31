@@ -1,39 +1,92 @@
-import { useEffect, useRef, VFC } from "react";
+import { memo, MutableRefObject, useEffect, useRef, useState, VFC } from "react";
 import { StackController } from "@/components/controllers/stack";
 import { Stack } from "@/visual-ds/structure/stack";
 import { StackD3Renderer } from "@/visual-ds/renderer/d3/stack";
+import { getExpose } from "@/visual-ds/structure/base";
+
+interface StackVisualizerProps {
+    stackRef: MutableRefObject<Stack>;
+    // useRef 로 얻어온 current 객체
+}
+
+/**
+ * 스택을 prop으로 받아서 렌더링
+ */
+const StackVisualizer = memo<StackVisualizerProps>(
+    // memo 함수를 통해 Visualizer 컴포넌트 리렌더링 효율 향상
+    function Visualizer({ stackRef }) {
+        // props 로 Stack 자료구조의 current 객체 받기.
+        const renderer = useRef<StackD3Renderer>(null);
+        // renderer 형은 D3 형태. D3 객체 구조를 받아오는 것인가???
+        const container = useRef<HTMLDivElement>(null);
+        // container 형은 HTMLDivElement 형태. 일반적인 HTML 태그.
+
+        useEffect(() => {
+            renderer.current = new StackD3Renderer(stackRef.current);
+            const node = renderer.current.node(); // SVG Element 하나를 만드나???
+            container.current.appendChild(node); // appent 시킴.
+            return () => {
+                renderer.current.remove();// Unmount 시, clean-up.
+            };
+        }, []);
+
+        return <div ref={container}></div>;
+    },
+    () => {
+        return false;
+    }
+);
+
+const StackSerializer = <T extends unknown>(props: { data: T[] }) => {
+    const { data = [] } = props;
+    function serialize(data: T[]) {
+        let ret = "";
+
+        ret += data.length + "\n";
+        for (let v of data) {
+            ret += `${v} `;
+        }
+        ret += "\n";
+
+        return ret;
+    }
+
+    return (
+        <div>
+            <pre>{serialize(data)}</pre>
+        </div>
+    );
+};
 
 export default (function StackD3() {
-    const container = useRef<HTMLDivElement>(null);
-    const stack = useRef<Stack>(null);
-    const renderer = useRef<StackD3Renderer>(null);
-    console.log("stacking");
-    console.log(stack);
-    useEffect(() => {
-        stack.current = new Stack();
-        renderer.current = new StackD3Renderer(stack.current);
+    // default 스택 페이지
+    // 구현한 스택 자료구조는 불변성이 없으므로 Ref로 사용
+    const stack = useRef<Stack>(new Stack());
+    // 자료형 : Stack
+    // Stack 자료구조의 기본 형태를 갖는다.
 
-        const node = renderer.current.node();
+    const [currentStack, setCurrentStack] = useState([]);
+    // currentStack 기본 값은 [], setCurrentStack 으로 set 가능.
 
-        container.current.appendChild(node);
-
-        return () => {
-            node.remove();
-        };
-    });
+    useEffect(() => {}, []);
 
     function handlePush(value: string) {
         stack.current.push(value);
+
+        setCurrentStack(getExpose(stack.current).stack);
     }
 
     function handlePop() {
         stack.current.pop();
+
+        setCurrentStack(getExpose(stack.current).stack);
     }
 
     return (
         <div>
             <StackController onPush={handlePush} onPop={handlePop} />
-            <div ref={container}></div>
+            <StackVisualizer stackRef={stack} />
+            <StackSerializer data={currentStack} />
         </div>
     );
 } as VFC);
