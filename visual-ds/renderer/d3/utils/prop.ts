@@ -19,7 +19,14 @@ export function makeProps<T extends object>(
         handlers = {};
     }
 
+    if (typeof props !== "object") {
+        props = {} as T;
+    }
+
     const setter: ProxyHandler<T>["set"] = (obj, prop, value) => {
+        if (obj[prop] === value) {
+            return true;
+        }
         obj[prop] = value;
 
         if (typeof handlers === "function") {

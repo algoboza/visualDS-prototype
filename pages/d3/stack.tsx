@@ -1,12 +1,18 @@
 import { memo, MutableRefObject, useEffect, useRef, useState, VFC } from "react";
-import { StackController } from "@/components/controllers/stack";
+import { StackController, StackPropController } from "@/components/controllers/stack";
 import { Stack } from "@/visual-ds/structure/stack";
-import { StackD3Renderer } from "@/visual-ds/renderer/d3/stack";
+import {
+    defaultStackD3RendererProps,
+    StackD3Renderer,
+    StackD3RendererProps
+} from "@/visual-ds/renderer/d3/stack";
 import { getExpose } from "@/visual-ds/structure/base";
 
 interface StackVisualizerProps {
     stackRef: MutableRefObject<Stack>;
     // useRef 로 얻어온 current 객체
+
+    props: StackD3RendererProps;
 }
 
 /**
@@ -14,7 +20,7 @@ interface StackVisualizerProps {
  */
 const StackVisualizer = memo<StackVisualizerProps>(
     // memo 함수를 통해 Visualizer 컴포넌트 리렌더링 효율 향상
-    function Visualizer({ stackRef }) {
+    function Visualizer({ stackRef, props }) {
         // props 로 Stack 자료구조의 current 객체 받기.
         const renderer = useRef<StackD3Renderer>(null);
         // renderer 형은 D3 형태. D3 객체 구조를 받아오는 것인가???
@@ -22,13 +28,17 @@ const StackVisualizer = memo<StackVisualizerProps>(
         // container 형은 HTMLDivElement 형태. 일반적인 HTML 태그.
 
         useEffect(() => {
-            renderer.current = new StackD3Renderer(stackRef.current);
+            renderer.current = new StackD3Renderer(stackRef.current, props);
             const node = renderer.current.node(); // SVG Element 하나를 만드나???
             container.current.appendChild(node); // appent 시킴.
             return () => {
-                renderer.current.remove();// Unmount 시, clean-up.
+                renderer.current.remove(); // Unmount 시, clean-up.
             };
         }, []);
+
+        useEffect(() => {
+            renderer.current.props = props;
+        }, [props]);
 
         return <div ref={container}></div>;
     },
@@ -65,10 +75,12 @@ export default (function StackD3() {
     // 자료형 : Stack
     // Stack 자료구조의 기본 형태를 갖는다.
 
-    const [currentStack, setCurrentStack] = useState([]);
+    const [currentStack, setCurrentStack] = useState(() => []);
     // currentStack 기본 값은 [], setCurrentStack 으로 set 가능.
 
-    useEffect(() => {}, []);
+    const [currentProps, setCurrentProps] = useState<StackD3RendererProps>(
+        () => defaultStackD3RendererProps
+    );
 
     function handlePush(value: string) {
         stack.current.push(value);
@@ -82,11 +94,16 @@ export default (function StackD3() {
         setCurrentStack(getExpose(stack.current).stack);
     }
 
+    function handlePropsChange(key: string, value: unknown) {
+        setCurrentProps({ ...currentProps, [key]: value });
+    }
+
     return (
         <div>
             <StackController onPush={handlePush} onPop={handlePop} />
-            <StackVisualizer stackRef={stack} />
+            <StackVisualizer stackRef={stack} props={currentProps} />
             <StackSerializer data={currentStack} />
+            <StackPropController rendererProps={currentProps} onPropsChange={handlePropsChange} />
         </div>
     );
 } as VFC);

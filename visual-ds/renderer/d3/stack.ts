@@ -21,6 +21,15 @@ export interface StackD3RendererProps {
     showIndex?: boolean;
 }
 
+export const defaultStackD3RendererProps = Object.freeze({
+    cellSpace: 5,
+    cellWidth: 40,
+    cellHeight: 30,
+    flyDistance: 40,
+    showIndex: true,
+    showLabel: true
+});
+
 export class StackD3Renderer {
     private stack: Stack<string>;
 
@@ -31,7 +40,7 @@ export class StackD3Renderer {
 
     private observer: DSObserver;
 
-    props: StackD3RendererProps;
+    private _props: StackD3RendererProps;
 
     constructor(stack: Stack, props?: StackD3RendererProps) {
         if (!stack || !(stack instanceof Stack)) {
@@ -42,26 +51,30 @@ export class StackD3Renderer {
         this.observer = this.update.bind(this);
         this.stack.subscribe(this.observer);
 
+        this.svg = d3.create("svg").attr("viewBox", "0 0 800 200");
+
         // prop 들을 등록하고 prop 변경시의 동작을 지정
-        this.props = makeProps(
+        this.props = props ?? {};
+
+        // this.init();
+        // this.update();
+    }
+
+    get props(): StackD3RendererProps {
+        return this._props;
+    }
+
+    set props(obj: StackD3RendererProps) {
+        this._props = makeProps(
             {
-                cellSpace: 5,
-                cellWidth: 40,
-                cellHeight: 30,
-                flyDistance: 40,
-                showIndex: true,
-                showLabel: true,
-                ...props
+                ...defaultStackD3RendererProps,
+                ...obj
             },
             () => {
                 this.forceUpdate();
             }
         );
-
-        this.svg = d3.create("svg").attr("viewBox", "0 0 800 200");
-
-        this.init();
-        this.update();
+        this.forceUpdate();
     }
 
     remove(): void {
