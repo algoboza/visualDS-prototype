@@ -1,14 +1,15 @@
 import { DSObserver, getExpose } from "@/visual-ds/structure/base";
 import { Stack } from "@/visual-ds/structure/stack";
 import * as d3 from "d3";
+import { BaseType } from "d3";
 import { makeProps } from "./utils/prop";
 import { translate } from "./utils/svg";
 
-type Selection<T extends d3.BaseType = undefined, P extends d3.BaseType = null> = d3.Selection<
+type Selection<T extends d3.BaseType = BaseType, P extends d3.BaseType = BaseType> = d3.Selection<
     T,
-    undefined,
+    unknown,
     P,
-    undefined
+    unknown
 >;
 type GSelection = Selection<SVGGElement>;
 
@@ -52,6 +53,11 @@ export class StackD3Renderer {
         this.stack.subscribe(this.observer);
 
         this.svg = d3.create("svg").attr("viewBox", "0 0 800 200");
+        this.svg.call(
+            d3.zoom().on("zoom", ({ transform }) => {
+                this.root.attr("transform", transform);
+            })
+        );
 
         // prop 들을 등록하고 prop 변경시의 동작을 지정
         this.props = props ?? {};
@@ -159,11 +165,7 @@ abstract class StaticDrawer extends Drawer {
     update() {}
 }
 
-function transition() {
-    return d3.transition().duration(750).ease(d3.easeCubicOut);
-}
-
-function trans(selection: Selection<SVGElement>) {
+function transition(selection: Selection) {
     return selection.transition().duration(750).ease(d3.easeCubicOut);
 }
 
@@ -230,16 +232,14 @@ class BoxDrawer extends Drawer {
                 (update) => update,
                 (exit) =>
                     exit.call((exit) =>
-                        exit
-                            .transition(transition())
+                        transition(exit)
                             .attr("opacity", 0.0)
                             .attr("x", (_, i: number) => getCellX(this.props, i) + flyDistance)
                             .remove()
                     )
             )
             .call((group) =>
-                group
-                    .transition(transition())
+                transition(group)
                     .attr("x", (_, i: number) => getCellX(this.props, i))
                     .attr("opacity", 1.0)
             )
@@ -275,16 +275,10 @@ class TextDrawer extends Drawer {
                 (update) => update,
                 (exit) =>
                     exit.call((exit) =>
-                        exit
-                            .transition(transition())
-                            .attr("fill-opacity", 0.0)
-                            .attr("x", flyX)
-                            .remove()
+                        transition(exit).attr("fill-opacity", 0.0).attr("x", flyX).remove()
                     )
             )
-            .call((group) =>
-                group.transition(transition()).attr("x", normalX).attr("fill-opacity", 1.0)
-            )
+            .call((group) => transition(group).attr("x", normalX).attr("fill-opacity", 1.0))
             .text((d) => d.toString())
             .attr("y", getBoxStartY(this.props) + cellHeight / 2)
             .attr("dy", "0.35em");
@@ -315,14 +309,13 @@ class IndexDrawer extends Drawer {
                         .attr("fill-opacity", 0.0)
                         .attr("y", INDEX_HEIGHT - 10 - 30),
                 (update) => update,
-                (exit) => exit.transition(transition()).attr("fill-opacity", 0.0).remove()
+                (exit) => transition(exit).attr("fill-opacity", 0.0).remove()
             )
             .text((_, i: number) => i)
             .attr("dy", "0.35em")
             .attr("x", (_, i: number) => getCellX(this.props, i) + cellWidth / 2)
             .call((group) =>
-                group
-                    .transition(transition())
+                transition(group)
                     .attr("fill-opacity", 1.0)
                     .attr("y", INDEX_HEIGHT - 10)
             );
@@ -388,11 +381,11 @@ class PointerDrawer extends Drawer {
     update(stack: unknown[]) {
         const len = stack.length;
 
-        trans(this.topptr).attr(
+        transition(this.topptr).attr(
             "transform",
             translate(getTopX(this.props, len) - 12, getBoxEndY(this.props))
         );
 
-        trans(this.toptext).attr("x", getTopX(this.props, len));
+        transition(this.toptext).attr("x", getTopX(this.props, len));
     }
 }
