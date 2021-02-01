@@ -22,7 +22,7 @@ const NumberField: VFC<FieldProps> = function NumberField({
             type="number"
             label={label}
             value={props[propKey]}
-            onChange={({ target: { value } }) => onChange(propKey, value)}
+            onChange={({ target: { value } }) => onChange(propKey, parseInt(value))}
         />
     );
 };
@@ -139,9 +139,9 @@ export const StackPropController: VFC<StackPropControllerProps> = (props) => {
                 onChange={onPropsChange}
             />
             <NumberField
-                label="Cell Height"
+                label="Cell Width"
                 props={rendererProps}
-                propKey="cellHeight"
+                propKey="cellWidth"
                 onChange={onPropsChange}
             />
             <NumberField

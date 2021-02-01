@@ -142,15 +142,11 @@ abstract class Drawer {
     constructor(parent: Selection<SVGElement>, props: StackD3RendererProps) {
         this.group = parent.append("g");
         this.props = props;
-        this.init();
     }
 
     remove() {
         this.group.remove();
     }
-
-    // 초기 실행시에 그리기
-    init(): void {}
 
     // 데이터 변경시에 그리기
     abstract update(data: unknown[]): void;
@@ -165,6 +161,10 @@ abstract class StaticDrawer extends Drawer {
 
 function transition() {
     return d3.transition().duration(750).ease(d3.easeCubicOut);
+}
+
+function trans(selection: Selection<SVGElement>) {
+    return selection.transition().duration(750).ease(d3.easeCubicOut);
 }
 
 const INDEX_HEIGHT = 30;
@@ -331,7 +331,9 @@ class IndexDrawer extends Drawer {
 
 // 좌측의 범례를 표시하는 Drawer
 class LabelDrawer extends StaticDrawer {
-    init() {
+    constructor(selection, root) {
+        super(selection, root);
+
         const group = this.group;
         const { cellHeight, showIndex, showLabel } = this.props;
 
@@ -362,50 +364,35 @@ class LabelDrawer extends StaticDrawer {
 
 // 현재 Top 을 표시하는 Drawer
 class PointerDrawer extends Drawer {
-    update(stack: unknown[]) {
-        const group = this.group;
+    topptr: Selection<SVGPathElement>;
+    toptext: Selection<SVGTextElement>;
+    haha: number;
 
-        group
-            .selectAll("path.topptr")
-            .data([stack.length])
-            .join(
-                (enter) =>
-                    enter
-                        .append("path")
-                        .attr("class", "topptr")
-                        .attr("d", "M7.41,15.41L12,10.83L16.59,15.41L18,14L12,8L6,14L7.41,15.41Z")
-                        .attr(
-                            "transform",
-                            translate(getTopX(this.props, 0) - 12, getBoxEndY(this.props))
-                        ),
-                (update) =>
-                    update
-                        .call((update) =>
-                            update
-                                .transition(transition())
-                                .attr("transform", (len) =>
-                                    translate(getTopX(this.props, len) - 12, getBoxEndY(this.props))
-                                )
-                        )
-                        .attr("fill-color", "red"),
-                (exit) => exit
-            );
+    constructor(selection, props) {
+        super(selection, props);
 
-        group
-            .selectAll("text.topptr")
-            .data([stack.length])
-            .join(
-                (enter) =>
-                    enter.append("text").attr("class", "topptr").attr("x", getTopX(this.props, 0)),
-                (update) =>
-                    update.call((update) =>
-                        update.transition(transition()).attr("x", (len) => getTopX(this.props, len))
-                    ),
-                (exit) => exit
-            )
+        this.topptr = this.group
+            .append("path")
+            .attr("d", "M7.41,15.41L12,10.83L16.59,15.41L18,14L12,8L6,14L7.41,15.41Z")
+            .attr("transform", translate(getTopX(this.props, 0) - 12, getBoxEndY(this.props)));
+
+        this.toptext = this.group
+            .append("text")
+            .attr("x", getTopX(this.props, 0))
             .text("TOP")
             .attr("text-anchor", "middle")
             .attr("dy", "0.75em")
             .attr("y", getBoxEndY(this.props) + 20);
+    }
+
+    update(stack: unknown[]) {
+        const len = stack.length;
+
+        trans(this.topptr).attr(
+            "transform",
+            translate(getTopX(this.props, len) - 12, getBoxEndY(this.props))
+        );
+
+        trans(this.toptext).attr("x", getTopX(this.props, len));
     }
 }
