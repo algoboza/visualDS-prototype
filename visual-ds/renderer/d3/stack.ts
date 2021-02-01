@@ -11,6 +11,9 @@ type Selection<T extends d3.BaseType = undefined, P extends d3.BaseType = null> 
 >;
 type GSelection = Selection<SVGGElement>;
 
+/**
+ * Stack 을 rendering 할 때 갖춰주어야할 props
+ */
 interface StackD3RendererProps {
     cellSpace?: number;
     cellWidth?: number;
@@ -19,14 +22,24 @@ interface StackD3RendererProps {
 }
 
 export class StackD3Renderer {
-    private stack: Stack<string>;
+    // 스택 
+    private stack: Stack<string>; 
 
-    private root: GSelection;
-    private svg: Selection<SVGSVGElement>;
+    // svg root tag?
+    /** root 또한 동일
+    svg: Selection
+        _groups: [Array(1)]
+        _parents: [null]
+        __proto__: Object
+    */
+    private root: GSelection; 
+    private svg: Selection<SVGSVGElement>; 
 
-    private drawers: Drawer[];
+    // Drawer abstract
+    private drawers: Drawer[]; 
 
-    private observer: DSObserver;
+    // type:string 의 값이 있어야함.
+    private observer: DSObserver; 
 
     props: StackD3RendererProps;
 
@@ -36,7 +49,13 @@ export class StackD3Renderer {
         }
 
         this.stack = stack;
-        this.observer = this.update.bind(this);
+
+        // update 함수에 this binding 한 결과 전달
+        // this만 바인딩한 update 함수 전달.
+        // (args:TArgs): void; => TArgs 는 null도 되는것?
+        this.observer = this.update.bind(this);  
+
+        //  [ObserverKey]: DSObserver<TNotify>[]; 배열에 옵저버넣기
         this.stack.subscribe(this.observer);
 
         // prop 들을 등록하고 prop 변경시의 동작을 지정
@@ -53,6 +72,7 @@ export class StackD3Renderer {
             }
         );
 
+        // 맨 위 svg 만들기.
         this.svg = d3.create("svg").attr("viewBox", "0 0 800 200");
 
         this.init();
@@ -75,6 +95,7 @@ export class StackD3Renderer {
     }
 
     init(): void {
+        // root 의 역할으 맨 위의 g 태그를 가리키는 것.
         this.root = this.svg.append("g").attr("transform", "translate(50, 0)");
 
         // Drawer들 한번에 호출
@@ -131,6 +152,7 @@ abstract class Drawer {
     }
 
     // 초기 실행시에 그리기
+    // 범례 그리는데에 사용됨.
     init(): void {}
 
     // 데이터 변경시에 그리기
@@ -186,7 +208,9 @@ class BoxDrawer extends Drawer {
             )
             .attr("y", INDEX_HEIGHT)
             .attr("height", cellHeight)
-            .attr("width", cellWidth);
+            .attr("width", cellWidth)
+            // 21.01.31. test branch tested.
+            .on("click",function(){alert('box!');}); 
     }
 }
 
