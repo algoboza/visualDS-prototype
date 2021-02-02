@@ -7,6 +7,7 @@ import {
     StackD3RendererProps
 } from "@/visual-ds/renderer/d3/stack";
 import { getExpose } from "@/visual-ds/structure/base";
+import { D3Board, D3Renderer } from "@/visual-ds/renderer/d3/general";
 
 interface StackVisualizerProps {
     stackRef: MutableRefObject<Stack>;
@@ -19,20 +20,24 @@ interface StackVisualizerProps {
  * 스택을 prop으로 받아서 렌더링
  */
 const StackVisualizer = memo<StackVisualizerProps>(
-    // memo 함수를 통해 Visualizer 컴포넌트 리렌더링 효율 향상
     function Visualizer({ stackRef, props }) {
-        // props 로 Stack 자료구조의 current 객체 받기.
-        const renderer = useRef<StackD3Renderer>(null);
-        // renderer 형은 D3 형태. D3 객체 구조를 받아오는 것인가???
+        const renderer = useRef<D3Renderer>(null);
         const container = useRef<HTMLDivElement>(null);
-        // container 형은 HTMLDivElement 형태. 일반적인 HTML 태그.
 
         useEffect(() => {
+            // Board를 먼저 만들고 거기에 Renderer 추가
+            const board = new D3Board();
             renderer.current = new StackD3Renderer(stackRef.current, props);
-            const node = renderer.current.node(); // SVG Element 하나를 만드나???
-            container.current.appendChild(node); // appent 시킴.
+
+            board.add(renderer.current);
+
+            const node = board.node();
+
+            node.style.width = "100%";
+
+            container.current.appendChild(node);
             return () => {
-                renderer.current.remove(); // Unmount 시, clean-up.
+                board.remove(); // Unmount 시, clean-up.
             };
         }, []);
 

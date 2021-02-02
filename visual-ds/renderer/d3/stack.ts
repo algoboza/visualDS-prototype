@@ -1,17 +1,9 @@
 import { DSObserver, getExpose } from "@/visual-ds/structure/base";
 import { Stack } from "@/visual-ds/structure/stack";
 import * as d3 from "d3";
-import { BaseType } from "d3";
+import { D3Renderer, GSelection, Selection } from "./general";
 import { makeProps } from "./utils/prop";
 import { translate } from "./utils/svg";
-
-type Selection<T extends d3.BaseType = BaseType, P extends d3.BaseType = BaseType> = d3.Selection<
-    T,
-    unknown,
-    P,
-    unknown
->;
-type GSelection = Selection<SVGGElement>;
 
 export interface StackD3RendererProps {
     cellSpace?: number;
@@ -31,17 +23,12 @@ export const defaultStackD3RendererProps = Object.freeze({
     showLabel: true
 });
 
-export class StackD3Renderer {
+export class StackD3Renderer implements D3Renderer {
     private stack: Stack<string>;
-
-    private root: GSelection;
-    private svg: Selection<SVGSVGElement>;
-
     private drawers: Drawer[];
-
     private observer: DSObserver;
-
     private _props: StackD3RendererProps;
+    private root: GSelection;
 
     constructor(stack: Stack, props?: StackD3RendererProps) {
         if (!stack || !(stack instanceof Stack)) {
@@ -52,12 +39,7 @@ export class StackD3Renderer {
         this.observer = this.update.bind(this);
         this.stack.subscribe(this.observer);
 
-        this.svg = d3.create("svg").attr("viewBox", "0 0 800 200");
-        this.svg.call(
-            d3.zoom().on("zoom", ({ transform }) => {
-                this.root.attr("transform", transform);
-            })
-        );
+        this.root = d3.create("svg:g");
 
         // prop 들을 등록하고 prop 변경시의 동작을 지정
         this.props = props ?? {};
@@ -85,7 +67,6 @@ export class StackD3Renderer {
 
     remove(): void {
         this.root.remove();
-        this.svg.remove();
         this.root = null;
 
         this.stack.unsubscribe(this.observer);
@@ -100,8 +81,6 @@ export class StackD3Renderer {
     }
 
     init(): void {
-        this.root = this.svg.append("g");
-
         // Drawer들 한번에 호출
         this.drawers = [BoxDrawer, TextDrawer, IndexDrawer, PointerDrawer, LabelDrawer].map(
             (D) => new D(this.root, this.props)
@@ -123,13 +102,13 @@ export class StackD3Renderer {
             return;
         }
 
-        this.svg.select("*").remove();
+        this.root.selectAll("*").remove();
         this.init();
         this.update();
     }
 
-    node(): SVGSVGElement {
-        return this.svg.node();
+    node(): GSelection {
+        return this.root;
     }
 
     get alive(): boolean {
