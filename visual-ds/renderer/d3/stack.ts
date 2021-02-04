@@ -65,7 +65,7 @@ export class StackD3Renderer implements D3Renderer {
         this.forceUpdate();
     }
 
-    remove(): void {
+    dispose(): void {
         this.root.remove();
         this.root = null;
 
@@ -107,7 +107,7 @@ export class StackD3Renderer implements D3Renderer {
         this.update();
     }
 
-    node(): GSelection {
+    g(): GSelection {
         return this.root;
     }
 

@@ -12,7 +12,8 @@ export type GSelection = Selection<SVGGElement>;
  * 여러개의 Renderer들을 통합 관리하는 Board
  */
 export class D3Board {
-    svg: d3.Selection<SVGSVGElement, undefined, null, undefined>;
+    svg: Selection<SVGSVGElement>;
+    root: GSelection;
     children: D3BoardItem[];
 
     private zoom: ZoomBehavior<Element, unknown>;
@@ -21,9 +22,12 @@ export class D3Board {
         this.children = [];
 
         this.svg = d3.create("svg");
+        this.root = this.svg.append("g");
+
         this.zoom = d3.zoom().on("zoom", ({ transform }) => {
-            this.children.forEach((r) => r.g().attr("transform", transform));
+            this.root.attr("transform", transform);
         });
+
         this.svg.call(this.zoom);
     }
 
@@ -35,14 +39,21 @@ export class D3Board {
         const item = new D3BoardItem(renderer);
         this.children.push(item);
 
-        this.svg.append(() => renderer.node().node());
+        this.root.append(() => renderer.g().node());
+    }
+
+    remove(renderer: D3Renderer): void {
+        const idx = this.children.findIndex((c) => renderer === c.renderer);
+        if (idx !== -1) {
+            this.children.splice(idx, 1);
+        }
     }
 
     /**
      * Board 자원 모두 해제
      */
-    remove(): void {
-        this.children.forEach((r) => r.remove());
+    dispose(): void {
+        this.children.forEach((r) => r.dispose());
         this.zoom.on("zoom", null);
         this.svg.remove();
     }
@@ -56,22 +67,23 @@ export class D3Board {
 }
 
 export interface D3Renderer {
-    node(): GSelection;
-    remove(): void;
+    g(): GSelection;
+    dispose(): void;
     props: object;
 }
 
 class D3BoardItem {
-    renderer: D3Renderer;
+    readonly renderer: D3Renderer;
+
     constructor(renderer: D3Renderer) {
         this.renderer = renderer;
     }
 
-    remove(): void {
-        this.renderer.remove();
+    dispose(): void {
+        this.renderer.dispose();
     }
 
     g() {
-        return this.renderer.node();
+        return this.renderer.g();
     }
 }

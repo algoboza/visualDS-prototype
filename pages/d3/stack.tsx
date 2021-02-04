@@ -37,7 +37,7 @@ const StackVisualizer = memo<StackVisualizerProps>(
 
             container.current.appendChild(node);
             return () => {
-                board.remove(); // Unmount 시, clean-up.
+                board.dispose(); // Unmount 시, clean-up.
             };
         }, []);
 
