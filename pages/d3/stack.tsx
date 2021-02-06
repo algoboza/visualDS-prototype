@@ -12,8 +12,6 @@ import { D3Board, D3Renderer } from "@/visual-ds/renderer/d3/general";
 // useRef 로 얻어온 current 객체
 interface StackVisualizerProps {
     stackRef: MutableRefObject<Stack>;
-    // useRef 로 얻어온 current 객체
-
     props: StackD3RendererProps;
 }
 

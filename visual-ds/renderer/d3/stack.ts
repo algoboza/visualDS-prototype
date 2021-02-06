@@ -167,6 +167,7 @@ function getBoxStartY(props: StackD3RendererProps) {
     }
 }
 
+// label 표시 가능 시, LABEL_WIDTH 길이부터 X 축 시작.
 function getBoxStartX(props: StackD3RendererProps) {
     const { showLabel } = props;
 
@@ -177,6 +178,7 @@ function getBoxStartX(props: StackD3RendererProps) {
     }
 }
 
+// 시작좌표 + 모든 셀 및 공백 거리 * 개수 길이.
 function getCellX(props: StackD3RendererProps, index: number) {
     const { cellWidth, cellSpace } = props;
 
@@ -189,6 +191,7 @@ function getBoxEndY(props: StackD3RendererProps) {
     return getBoxStartY(props) + cellHeight;
 }
 
+// 
 function getTopX(props: StackD3RendererProps, len: number) {
     if (len === 0) {
         return getCellX(props, 0);
@@ -213,7 +216,8 @@ class BoxDrawer extends Drawer {
                     enter
                         .append("rect")
                         .attr("x", (_, i: number) => getCellX(this.props, i) + flyDistance)
-                        .attr("opacity", 0.0),
+                        .attr("opacity", 0.0)
+                        .attr("transform", translate(getTopX(this.props, 0), getBoxEndY(this.props))),
                 (update) => update,
                 (exit) =>
                     exit.call((exit) =>
