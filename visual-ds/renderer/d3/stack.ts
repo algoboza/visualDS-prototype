@@ -216,8 +216,7 @@ class BoxDrawer extends Drawer {
                     enter
                         .append("rect")
                         .attr("x", (_, i: number) => getCellX(this.props, i) + flyDistance)
-                        .attr("opacity", 0.0)
-                        .attr("transform", translate(getTopX(this.props, 0), getBoxEndY(this.props))),
+                        .attr("opacity", 0.0),
                 (update) => update,
                 (exit) =>
                     exit.call((exit) =>

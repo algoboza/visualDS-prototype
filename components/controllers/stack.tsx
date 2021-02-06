@@ -63,11 +63,11 @@ export const StackController: VFC<StackControllerProps> = (props) => {
         }
         return { trigger: () => {} };
     }
-
+    
+    // 현재 입력 값 trace 하는 역할.
     function handleValueChange({ target: { value } }) {
         setValue(value);
     }
-    // 현재 입력 값 trace 하는 역할.
 
     function handlePush() {
         if (value === "") {
@@ -83,7 +83,7 @@ export const StackController: VFC<StackControllerProps> = (props) => {
         event(onPop).trigger();
     }
 
-    function handleKeyPress(e: KeyboardEvent<HTMLInputElement>) {
+    function handleKeyPress(e: KeyboardEvent) {
         if (e.key == "Enter") {
             handlePush();
         }

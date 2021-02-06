@@ -26,6 +26,11 @@ export default (function Home() {
                         StackD3
                     </a>
                 </div>
+                <div>
+                    <a href="queue" onClick={clickPage("d3/queue")}>
+                        QueueD3
+                    </a>
+                </div>
                 <h2>SVG.js</h2>
                 <div>
                     <a href="stack" onClick={clickPage("svgjs/stack")}>
