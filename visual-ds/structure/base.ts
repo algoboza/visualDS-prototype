@@ -10,6 +10,7 @@ export type Visualizable = string | number | DSBase<unknown>; // types that visu
  * 자세한 내부 정보는 별도의 getExpose 함수를 통해서만 얻을 수 있게 한다.
  */
 
+// Symbol 함수로 생성한 고유키
 // 자료구조의 Expose에 접근할 수 있는 유일한 키
 const ExposeKey = Symbol("Data Structure Expose Key");
 

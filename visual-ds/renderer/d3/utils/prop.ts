@@ -4,12 +4,12 @@ export interface PropHandler<T> {
 
 export interface PropGlobalHandler<T> {
     (prop: keyof T | string | number | symbol, value: T[keyof T]): void;
-}
+} // prop type : T | string ~ , value type : T[keyof T]
 
 /**
  * 변경 사항시 이벤트를 호출해주는 props 객체 생성
- * @param props prop들의 기본값 객체
- * @param handlers prop 변경시 호출될 이벤트 객체 혹은 함수
+ * @param props : prop들의 기본값 객체
+ * @param handlers : prop 변경시 호출될 이벤트 객체 혹은 함수
  */
 export function makeProps<T extends object>(
     props: T,
@@ -19,7 +19,14 @@ export function makeProps<T extends object>(
         handlers = {};
     }
 
+    if (typeof props !== "object") {
+        props = {} as T;
+    }
+
     const setter: ProxyHandler<T>["set"] = (obj, prop, value) => {
+        if (obj[prop] === value) {
+            return true;
+        }
         obj[prop] = value;
 
         if (typeof handlers === "function") {
@@ -41,6 +48,6 @@ export function makeProps<T extends object>(
     };
 
     const proxy = new Proxy<T>({ ...props }, { set: setter });
-
+    // 프록시 객체의 용도 ???
     return proxy;
 }
