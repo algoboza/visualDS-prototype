@@ -60,7 +60,7 @@ export class DSBase<TExpose, TNotify = ChangeArgs>
     // 일반적인 방법으로 Observer 배열과 Expose 함수에 접근할 수 없게 한다.
     [ObserverKey]: DSObserver<TNotify>[];
     [ExposeKey]: DSExposeFn<TExpose>;
-
+    
     constructor() {
         this[ObserverKey] = [];
         this[ExposeKey] = null;

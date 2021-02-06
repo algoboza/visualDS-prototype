@@ -4,7 +4,8 @@ import { memo, MutableRefObject, useEffect, useRef, useState, VFC } from "react"
  * 2. 큐의 틀 만들기
  * 3. 큐 모양 형성 만들기 d3
  */
-import {QueueController} from "@/components/controllers/queue";
+import { QueueController } from "@/components/controllers/queue";
+import { Queue } from "@/visual-ds/structure/queue";
 
 export default(function QueueD3(){
         function handlePush(value: string) {

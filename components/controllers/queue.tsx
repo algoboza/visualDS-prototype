@@ -1,6 +1,6 @@
 import { KeyboardEvent, useRef, useState, VFC } from "react";
 import { Button, TextField } from "@material-ui/core";
-import { ToggleButton } from "@material-ui/lab";
+import { ToggleButton } from "@material-ui/lab"; 
 
 /**
  * 큐 모양 조절을 위한 props
@@ -11,8 +11,8 @@ import { ToggleButton } from "@material-ui/lab";
 //     propKey: string;
 //     onChange(key: string, value:null): void;
 // }
+
 export interface QueueControllerProps{
-    // void? {}?
     onPush?: (value:string)=>void;
     onPop?:()=>void;
 }
