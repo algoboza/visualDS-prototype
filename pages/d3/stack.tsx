@@ -7,7 +7,8 @@ import {
     StackD3RendererProps
 } from "@/visual-ds/renderer/d3/stack";
 import { getExpose } from "@/visual-ds/structure/base";
-import { D3Board, D3Renderer } from "@/visual-ds/renderer/d3/general";
+import { D3Renderer } from "@/visual-ds/renderer/d3/general";
+import { D3Board } from "@/visual-ds/renderer/d3/board";
 
 interface StackVisualizerProps {
     stackRef: MutableRefObject<Stack>;
