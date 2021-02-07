@@ -99,7 +99,6 @@ export class StackD3Renderer implements D3Renderer {
         }
 
         const stk = getExpose(this.stack).stack;
-
         this.drawers.forEach((d) => d.update(stk));
     }
 
@@ -203,11 +202,9 @@ function getTopX(props: StackD3RendererProps, len: number) {
 class BoxDrawer extends Drawer {
     update(stack: unknown[]) {
         const group = this.group;
-
         const { cellWidth, cellHeight, flyDistance } = this.props;
 
         group.attr("fill", "#660eb3");
-
         group
             .selectAll("rect")
             .data(stack)

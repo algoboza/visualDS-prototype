@@ -105,12 +105,11 @@ export class DSBase<TExpose, TNotify = ChangeArgs>
 }
 
 /**
- * 자료구조에서 Expose 데이터를 추출한다.
+ * 자료구조에서 Expose 데이터(객체) 를 추출한다.
  * @param structure Expose를 추출할 자료구조
  */
 export function getExpose<TExpose>(structure: DSBase<TExpose>): TExpose {
     if (structure[ExposeKey] !== null) {
         return structure[ExposeKey]();
     }
-    // 자료구조의 객체를 반환.
 }

@@ -22,6 +22,7 @@ interface PopArgs<T> {
  */
 type ChangeArgs<T> = PushArgs<T> | PopArgs<T>;
 
+// DSBase 를 상속한 Queue
 export class Queue<T = unknown> extends DSBase<QueueExpose<T>, ChangeArgs<T>>{
     public readonly name="Queue";
 

@@ -6,7 +6,12 @@ import { memo, MutableRefObject, useEffect, useRef, useState, VFC } from "react"
  */
 import { QueueController } from "@/components/controllers/queue";
 import { Queue } from "@/visual-ds/structure/queue";
+import { getExpose } from "@/visual-ds/structure/base";
+import { D3Board, D3Renderer } from "@/visual-ds/renderer/d3/general";
 
+interface QueueVisualizerProps {
+    queueRef: MutableRefObject<Queue>;
+}
 export default(function QueueD3(){
         function handlePush(value: string) {
             console.log("Q push");
