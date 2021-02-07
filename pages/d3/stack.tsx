@@ -35,6 +35,7 @@ const StackVisualizer = memo<StackVisualizerProps>(
             const node = board.node();
 
             node.style.width = "100%";
+            node.style.height = "60vh";
 
             container.current.appendChild(node);
             return () => {

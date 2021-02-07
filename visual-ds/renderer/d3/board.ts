@@ -4,7 +4,8 @@ import { GSelection, Selection, D3Renderer } from "./general";
 import type { ZoomBehavior } from "d3";
 
 /**
- * 여러개의 Renderer들을 통합 관리하는 Board
+ * 여러개의 Renderer들을 모아주는 Board
+ * 확대, 축소, 크기조절을 담당한다
  */
 export class D3Board {
     svg: Selection<SVGSVGElement>;
@@ -64,15 +65,21 @@ export class D3Board {
 class D3BoardItem {
     readonly renderer: D3Renderer;
 
+    private readonly root: GSelection;
+
     constructor(renderer: D3Renderer) {
+        this.root = d3.create("svg:g");
+
         this.renderer = renderer;
+        this.root.append(() => renderer.g().node());
     }
 
     dispose(): void {
         this.renderer.dispose();
+        this.root.remove();
     }
 
     g() {
-        return this.renderer.g();
+        return this.root;
     }
 }

@@ -58,9 +58,7 @@ export class StackD3Renderer implements D3Renderer {
                 ...defaultStackD3RendererProps,
                 ...obj
             },
-            () => {
-                this.forceUpdate();
-            }
+            this.propChanged.bind(this)
         );
         this.forceUpdate();
     }
@@ -95,6 +93,10 @@ export class StackD3Renderer implements D3Renderer {
         const stk = getExpose(this.stack).stack;
 
         this.drawers.forEach((d) => d.update(stk));
+    }
+
+    propChanged(): void {
+        this.forceUpdate();
     }
 
     forceUpdate(): void {
