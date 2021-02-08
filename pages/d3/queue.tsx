@@ -21,7 +21,7 @@ const QueueVisualizer=memo<QueueVisualizerProps>(
 
         useEffect(()=>{
             const board=new D3Board();
-            renderer.current = new QueueD3Renderer(queueRef.current);
+            renderer.current = new QueueD3Renderer(queueRef.current, props);
             board.add(renderer.current);
 
             const node=board.node();
@@ -93,7 +93,7 @@ export default(function QueueD3(){
                 <QueueVisualizer queueRef={queue} props={currentProps} />
                 <QueueSerializer data={currentQueue} />
             </div>
-        )
-    }
-)
+        );
+    } as VFC
+);
  

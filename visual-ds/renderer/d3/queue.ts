@@ -79,6 +79,18 @@ export class QueueD3Renderer implements D3Renderer {
     init(): void{
         this.drawers=[BoxDrawer,TextDrawer].map((D)=>new D(this.root, this.props))
     }
+    update(): void{
+        if(!this.alive){
+            return;
+        }
+        // DSBase 를 상속한 string 형의 queue 객체.
+        // .queue 를 더 붙여주는 이유는 객체형이며, queue 키에 찐 큐가 들어있기 때문.
+        const que=getExpose(this.queue).queue;
+        console.log(que);
+        // drawers 클래스의 TextInput, LineDraw 등등.. 
+        // 모든 곳에 queue 를 전달해서 그림 업데이트
+        this.drawers.forEach((d)=>d.update(que));
+    }
     forceUpdate(): void{
         if(!this.alive){
             return;
@@ -92,18 +104,7 @@ export class QueueD3Renderer implements D3Renderer {
         return this.root !== null;
     }
 
-    update(): void{
-        if(!this.alive){
-            return;
-        }
-        // DSBase 를 상속한 string 형의 queue 객체.
-        // .queue 를 더 붙여주는 이유는 객체형이며, queue 키에 찐 큐가 들어있기 때문.
-        const que=getExpose(this.queue).queue;
-        console.log(que);
-        // drawers 클래스의 TextInput, LineDraw 등등.. 
-        // 모든 곳에 queue 를 전달해서 그림 업데이트
-        this.drawers.forEach((d)=>console.log(d));
-    }
+    
 
     g(): GSelection {
         return this.root;
@@ -192,7 +193,7 @@ class BoxDrawer extends Drawer{
             (enter)=>
                 enter
                 .append("rect")
-                .attr("x", (_,i:number)=>getCellX(this.props, i) + flyDistance)
+                .attr("x", getBoxStartX(this.props))
                 .attr("opacity",0.0),
             (update)=>update,
             (exit) =>
