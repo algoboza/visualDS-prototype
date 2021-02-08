@@ -9,7 +9,7 @@ export type Selection<
 export type GSelection = Selection<SVGGElement>;
 
 export interface D3Renderer {
-    g(): GSelection;
+    node(): Element;
     dispose(): void;
     props: object;
 }

@@ -109,8 +109,8 @@ export class StackD3Renderer implements D3Renderer {
         this.update();
     }
 
-    g(): GSelection {
-        return this.root;
+    node(): SVGElement {
+        return this.root.node();
     }
 
     get alive(): boolean {

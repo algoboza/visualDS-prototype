@@ -35,7 +35,7 @@ export class D3Board {
         const item = new D3BoardItem(renderer);
         this.children.push(item);
 
-        this.root.append(() => renderer.g().node());
+        this.root.append(() => renderer.node());
     }
 
     remove(renderer: D3Renderer): void {
@@ -71,7 +71,7 @@ class D3BoardItem {
         this.root = d3.create("svg:g");
 
         this.renderer = renderer;
-        this.root.append(() => renderer.g().node());
+        this.root.append(() => renderer.node());
     }
 
     dispose(): void {
