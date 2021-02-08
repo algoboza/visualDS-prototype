@@ -41,7 +41,6 @@ export class StackD3Renderer implements D3Renderer {
         // this만 바인딩한 update 함수 전달.
         // (args:TArgs): void; => TArgs 는 null도 되는것?
         this.observer = this.update.bind(this);  
-
         //  [ObserverKey]: DSObserver<TNotify>[]; 배열에 옵저버넣기
         this.stack.subscribe(this.observer);
 
@@ -149,6 +148,7 @@ abstract class StaticDrawer extends Drawer {
     update() {}
 }
 
+// 해당 액션이 750ms 동안 진행됨
 function transition(selection: Selection) {
     return selection.transition().duration(750).ease(d3.easeCubicOut);
 }
