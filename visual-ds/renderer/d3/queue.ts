@@ -43,7 +43,6 @@ export class QueueD3Renderer implements D3Renderer {
         // nullish coalescing operator
         // default value is {} (empty object)
         this.props=props ?? {};
-        console.log(this.props);
     }
 
     get props(): QueueD3RendererProps{
@@ -86,7 +85,6 @@ export class QueueD3Renderer implements D3Renderer {
         // DSBase 를 상속한 string 형의 queue 객체.
         // .queue 를 더 붙여주는 이유는 객체형이며, queue 키에 찐 큐가 들어있기 때문.
         const que=getExpose(this.queue).queue;
-        console.log(que);
         // drawers 클래스의 TextInput, LineDraw 등등.. 
         // 모든 곳에 queue 를 전달해서 그림 업데이트
         this.drawers.forEach((d)=>d.update(que));
@@ -204,10 +202,13 @@ class BoxDrawer extends Drawer{
                     .remove()
                 )
         )
-        .call((group)=>
-            transition(group)
-            .attr("x", (_, i: number) => getCellX(this.props, i))
-            .attr("opacity",1.0)
+        // fade in 효과의 작용부분? 확인요함 02.08
+        .call((group)=>{
+                console.log(group);
+                return transition(group)
+                .attr("x", (i:number=group._groups[0].length,j=0) => {j+=1;i=group._groups[0].length-j;return getCellX(this.props, i);})
+                .attr("opacity",1.0)
+            }
         )
         .attr("y",getBoxStartY(this.props))
         .attr("height",cellHeight)
