@@ -1,3 +1,4 @@
+import { List, ListItem } from "@material-ui/core";
 import Head from "next/head";
 import { useRouter } from "next/router";
 import { VFC } from "react";
@@ -20,11 +21,14 @@ export default (function Home() {
 
             <main className={styles.main}>
                 <h1>Visual DS</h1>
-                <div>
-                    <a href="stack" onClick={clickPage("d3/stack")}>
-                        StackD3
-                    </a>
-                </div>
+                <List>
+                    <ListItem button onClick={clickPage("d3/stack")}>
+                        Stack
+                    </ListItem>
+                    <ListItem button onClick={clickPage("d3/graph")}>
+                        Graph
+                    </ListItem>
+                </List>
             </main>
 
             <footer className={styles.footer}></footer>
