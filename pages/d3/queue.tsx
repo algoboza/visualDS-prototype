@@ -8,7 +8,8 @@ import { QueueController } from "@/components/controllers/queue";
 import { Queue } from "@/visual-ds/structure/queue";
 import {QueueD3Renderer,defaultQueueD3RendererProps,QueueD3RendererProps} from "@/visual-ds/renderer/d3/queue";
 import { getExpose } from "@/visual-ds/structure/base";
-import { D3Board, D3Renderer } from "@/visual-ds/renderer/d3/general";
+import { D3Renderer } from "@/visual-ds/renderer/d3/general";
+import { D3Board } from "@/visual-ds/renderer/d3/board";
 
 interface QueueVisualizerProps {
     queueRef: MutableRefObject<Queue>;
