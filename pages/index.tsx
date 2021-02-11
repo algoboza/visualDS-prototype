@@ -5,16 +5,16 @@ import { VFC } from "react";
 import styles from "../styles/Home.module.css";
 
 export default (function Home() {
-    const router = useRouter();
+    const router = useRouter(); // next Router 객체 
 
     const clickPage = (href: string) => (e) => {
         e.preventDefault();
-        router.push(href);
+        router.push(href); // Next routing using Event Handler 
     };
 
     return (
         <div className={styles.container}>
-            <Head>
+            <Head>  
                 <title>Visual DS</title>
                 <link rel="icon" href="/favicon.ico" />
             </Head>
@@ -24,6 +24,9 @@ export default (function Home() {
                 <List>
                     <ListItem button onClick={clickPage("d3/stack")}>
                         Stack
+                    </ListItem>
+                    <ListItem button onClick={clickPage("d3/queue")}>
+                        Queue
                     </ListItem>
                     <ListItem button onClick={clickPage("d3/graph")}>
                         Graph

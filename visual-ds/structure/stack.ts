@@ -25,11 +25,11 @@ type ChangeArgs<T> = PushArgs<T> | PopArgs<T>;
 export class Stack<T = unknown> extends DSBase<StackExpose<T>, ChangeArgs<T>> {
     public readonly name = "Stack";
 
-    private stk: T[];
+        private stk: T[];
 
-    constructor() {
-        super();
-        this.stk = [];
+        constructor() {
+            super();
+            this.stk = [];
 
         /**
          * Expose 시에 노출할 내부 정보들을 등록한다.
@@ -37,7 +37,7 @@ export class Stack<T = unknown> extends DSBase<StackExpose<T>, ChangeArgs<T>> {
         this.makeExpose(() => ({
             stack: [...this.stk]
         }));
-        // 형태 : 객체
+        // 형태 : 객체(* stack interface)
         // 자료형 : T[]
         // this.stk 값을 산개시켜줌.
         // #exposeFn 함수가 된다.

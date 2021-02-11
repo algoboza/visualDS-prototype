@@ -10,6 +10,7 @@ export type Visualizable = string | number | DSBase<unknown>; // types that visu
  * 자세한 내부 정보는 별도의 getExpose 함수를 통해서만 얻을 수 있게 한다.
  */
 
+// Symbol 함수로 생성한 고유키
 // 자료구조의 Expose에 접근할 수 있는 유일한 키
 const ExposeKey = Symbol("Data Structure Expose Key");
 
@@ -59,7 +60,7 @@ export class DSBase<TExpose, TNotify = ChangeArgs>
     // 일반적인 방법으로 Observer 배열과 Expose 함수에 접근할 수 없게 한다.
     [ObserverKey]: DSObserver<TNotify>[];
     [ExposeKey]: DSExposeFn<TExpose>;
-
+    
     constructor() {
         this[ObserverKey] = [];
         this[ExposeKey] = null;
@@ -104,12 +105,11 @@ export class DSBase<TExpose, TNotify = ChangeArgs>
 }
 
 /**
- * 자료구조에서 Expose 데이터를 추출한다.
+ * 자료구조에서 Expose 데이터(객체) 를 추출한다.
  * @param structure Expose를 추출할 자료구조
  */
 export function getExpose<TExpose>(structure: DSBase<TExpose>): TExpose {
     if (structure[ExposeKey] !== null) {
         return structure[ExposeKey]();
     }
-    // 자료구조의 객체를 반환.
 }

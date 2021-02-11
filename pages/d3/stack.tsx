@@ -10,15 +10,16 @@ import { getExpose } from "@/visual-ds/structure/base";
 import { D3Renderer } from "@/visual-ds/renderer/d3/general";
 import { D3Board } from "@/visual-ds/renderer/d3/board";
 
+// useRef 로 얻어온 current 객체
 interface StackVisualizerProps {
     stackRef: MutableRefObject<Stack>;
-    // useRef 로 얻어온 current 객체
-
     props: StackD3RendererProps;
 }
 
 /**
  * 스택을 prop으로 받아서 렌더링
+ * memo 함수를 통해 Visualizer 컴포넌트 리렌더링 효율 향상
+ * container 형은 HTMLDivElement 형태. 일반적인 HTML 태그.
  */
 const StackVisualizer = memo<StackVisualizerProps>(
     function Visualizer({ stackRef, props }) {

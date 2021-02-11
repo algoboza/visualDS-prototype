@@ -36,7 +36,12 @@ export class StackD3Renderer implements D3Renderer {
         }
 
         this.stack = stack;
-        this.observer = this.update.bind(this);
+
+        // update 함수에 this binding 한 결과 전달
+        // this만 바인딩한 update 함수 전달.
+        // (args:TArgs): void; => TArgs 는 null도 되는것?
+        this.observer = this.update.bind(this);  
+        //  [ObserverKey]: DSObserver<TNotify>[]; 배열에 옵저버넣기
         this.stack.subscribe(this.observer);
 
         this.root = d3.create("svg:g");
@@ -91,7 +96,6 @@ export class StackD3Renderer implements D3Renderer {
         }
 
         const stk = getExpose(this.stack).stack;
-
         this.drawers.forEach((d) => d.update(stk));
     }
 
@@ -146,6 +150,7 @@ abstract class StaticDrawer extends Drawer {
     update() {}
 }
 
+// 해당 액션이 750ms 동안 진행됨
 function transition(selection: Selection) {
     return selection.transition().duration(750).ease(d3.easeCubicOut);
 }
@@ -163,6 +168,7 @@ function getBoxStartY(props: StackD3RendererProps) {
     }
 }
 
+// label 표시 가능 시, LABEL_WIDTH 길이부터 X 축 시작.
 function getBoxStartX(props: StackD3RendererProps) {
     const { showLabel } = props;
 
@@ -173,6 +179,7 @@ function getBoxStartX(props: StackD3RendererProps) {
     }
 }
 
+// 시작좌표 + 모든 셀 및 공백 거리 * 개수 길이.
 function getCellX(props: StackD3RendererProps, index: number) {
     const { cellWidth, cellSpace } = props;
 
@@ -185,6 +192,7 @@ function getBoxEndY(props: StackD3RendererProps) {
     return getBoxStartY(props) + cellHeight;
 }
 
+// 
 function getTopX(props: StackD3RendererProps, len: number) {
     if (len === 0) {
         return getCellX(props, 0);
@@ -196,11 +204,9 @@ function getTopX(props: StackD3RendererProps, len: number) {
 class BoxDrawer extends Drawer {
     update(stack: unknown[]) {
         const group = this.group;
-
         const { cellWidth, cellHeight, flyDistance } = this.props;
 
         group.attr("fill", "#660eb3");
-
         group
             .selectAll("rect")
             .data(stack)
@@ -226,7 +232,9 @@ class BoxDrawer extends Drawer {
             )
             .attr("y", getBoxStartY(this.props))
             .attr("height", cellHeight)
-            .attr("width", cellWidth);
+            .attr("width", cellWidth)
+            // 21.01.31. test branch tested.
+            .on("click",function(){alert('box!');}); 
     }
 }
 
