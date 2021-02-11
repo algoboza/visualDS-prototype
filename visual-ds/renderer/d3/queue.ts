@@ -44,6 +44,9 @@ export class QueueD3Renderer implements D3Renderer {
         // default value is {} (empty object)
         this.props=props ?? {};
     }
+    node(): SVGElement {
+        return this.root.node();
+    }
 
     get props(): QueueD3RendererProps{
         return this._props;
@@ -206,7 +209,10 @@ class BoxDrawer extends Drawer{
         .call((group)=>{
                 console.log(group);
                 return transition(group)
-                .attr("x", (i:number=group._groups[0].length,j=0) => {j+=1;i=group._groups[0].length-j;return getCellX(this.props, i);})
+                .attr("x", (i:number=group._groups[0].length,j=0) => {
+                    j+=1;i=group._groups[0].length-j;
+                    return getCellX(this.props, i);
+                })
                 .attr("opacity",1.0)
             }
         )

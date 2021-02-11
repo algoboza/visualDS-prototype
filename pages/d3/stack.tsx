@@ -7,7 +7,8 @@ import {
     StackD3RendererProps
 } from "@/visual-ds/renderer/d3/stack";
 import { getExpose } from "@/visual-ds/structure/base";
-import { D3Board, D3Renderer } from "@/visual-ds/renderer/d3/general";
+import { D3Renderer } from "@/visual-ds/renderer/d3/general";
+import { D3Board } from "@/visual-ds/renderer/d3/board";
 
 // useRef 로 얻어온 current 객체
 interface StackVisualizerProps {
@@ -35,6 +36,7 @@ const StackVisualizer = memo<StackVisualizerProps>(
             const node = board.node();
 
             node.style.width = "100%";
+            node.style.height = "60vh";
 
             container.current.appendChild(node);
             return () => {

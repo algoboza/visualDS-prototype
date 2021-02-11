@@ -63,9 +63,7 @@ export class StackD3Renderer implements D3Renderer {
                 ...defaultStackD3RendererProps,
                 ...obj
             },
-            () => {
-                this.forceUpdate();
-            }
+            this.propChanged.bind(this)
         );
         this.forceUpdate();
     }
@@ -101,6 +99,10 @@ export class StackD3Renderer implements D3Renderer {
         this.drawers.forEach((d) => d.update(stk));
     }
 
+    propChanged(): void {
+        this.forceUpdate();
+    }
+
     forceUpdate(): void {
         if (!this.alive) {
             return;
@@ -111,8 +113,8 @@ export class StackD3Renderer implements D3Renderer {
         this.update();
     }
 
-    g(): GSelection {
-        return this.root;
+    node(): SVGElement {
+        return this.root.node();
     }
 
     get alive(): boolean {

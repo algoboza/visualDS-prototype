@@ -1,4 +1,5 @@
-import Head from "next/head"; // 
+import { List, ListItem } from "@material-ui/core";
+import Head from "next/head";
 import { useRouter } from "next/router";
 import { VFC } from "react";
 import styles from "../styles/Home.module.css";
@@ -20,26 +21,20 @@ export default (function Home() {
 
             <main className={styles.main}>
                 <h1>Visual DS</h1>
-                <h2>D3.js</h2>
-                <div>
-                    <a href="stack" onClick={clickPage("d3/stack")}>
-                        StackD3
-                    </a>
-                </div>
-                <div>
-                    <a href="queue" onClick={clickPage("d3/queue")}>
-                        QueueD3
-                    </a>
-                </div>
-                <h2>SVG.js</h2>
-                <div>
-                    <a href="stack" onClick={clickPage("svgjs/stack")}>
-                        StackSVG
-                    </a>
-                </div>
+                <List>
+                    <ListItem button onClick={clickPage("d3/stack")}>
+                        Stack
+                    </ListItem>
+                    <ListItem button onClick={clickPage("d3/queue")}>
+                        Queue
+                    </ListItem>
+                    <ListItem button onClick={clickPage("d3/graph")}>
+                        Graph
+                    </ListItem>
+                </List>
             </main>
 
             <footer className={styles.footer}></footer>
         </div>
     );
-});
+} as VFC);
