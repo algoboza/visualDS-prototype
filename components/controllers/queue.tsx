@@ -44,6 +44,7 @@ export const QueueController: VFC<QueueControllerProps> = (props)=>{
             return;
         }
         event(onPush).trigger(value);
+        setValue("");
     }
 
     const handlePop = () =>{
